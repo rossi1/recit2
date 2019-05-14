@@ -39,9 +39,9 @@ class CreateSubscriptionPlan(APIView):
     permission_classes = (IsAuthenticated,)
 
 
-    def post(self, **kwargs):
-        fetch_plan = self.request.query_params.get('sub_plan',  None)
-        tx_code = self.request.query_params.get('tf_code',  None)
+    def post(self, request, **kwargs):
+        fetch_plan = request.query_params.get('sub_plan',  None)
+        tx_code = request.query_params.get('tf_code',  None)
         if fetch_plan is not None:
             create_customer = self.create_customer(tx_code)
             if fetch_plan ==  SubscriptionPlanModel.freelance_plan.value:

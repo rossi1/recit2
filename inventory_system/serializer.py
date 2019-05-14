@@ -8,6 +8,11 @@ class ProductSerializer(serializers.ModelSerializer):
         model = InventoryProducts
         exclude = ('user', 'link')
 
+class ProductSerializerLising(serializers.ModelSerializer):
+    class Meta:
+        model = InventoryProducts
+        exclude = ('user',) 
+
 
 class ProductInvoicerSerializer(serializers.ModelSerializer):
     inventories = ProductSerializer()

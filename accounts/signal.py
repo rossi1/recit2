@@ -11,4 +11,4 @@ from .models import BusinessInfo
 def create_business_account_for_new_user(sender, created, instance, **kwargs):
     if created:
         BusinessInfo.objects.create(user=instance)
-        
+        SubscriptionPlan.objects.create(plan_id=instance)

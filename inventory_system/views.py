@@ -1,4 +1,7 @@
+from collections import OrderedDict
+
 from django.conf import settings
+from django.contrib.auth import get_user_model
 
 from rest_framework.response import Response
 from rest_framework.decorators import permission_classes, authentication_classes, api_view
@@ -9,7 +12,7 @@ from rest_framework.settings import api_settings
 from rest_framework.validators import ValidationError
 from rest_framework.generics import CreateAPIView, RetrieveUpdateAPIView, DestroyAPIView, ListAPIView, RetrieveAPIView, get_object_or_404
 
-from  .serializer import ProductSerializer, ProductInvoicerSerializer
+from  .serializer import ProductSerializer, ProductInvoicerSerializer, ProductSerializerLising
 from  .models import InventoryProducts, InventoryInvoices
 
 class ProductCreationView(CreateAPIView):
@@ -43,7 +46,7 @@ class ProductCreationView(CreateAPIView):
 
 class ProductListingView(ListAPIView):
     #authentication_classes = (SessionAuthentication,)
-    serializer_class = ProductSerializer
+    serializer_class = ProductSerializerLising
     queryset = InventoryProducts
     permission_classes = (IsAuthenticated,)
 
@@ -67,14 +70,15 @@ class ProductEditView(RetrieveUpdateAPIView):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated,])
 def update_product_quantity_view_to_not_available(request, product_id):
-    try:
-        InventoryProducts.objects.get(product_id=product_id).update(is_avaliable=False)
-    except InventoryProducts.DoesNotExist:
-        raise ValidationError('Product Does Not Exist')
- 
-    else:
-        return Response(data={'response': 'success', 'message': 'product updated succesfully'}, 
-        status=status.HTTP_200_OK)
+    product =  get_object_or_404(InventoryProducts, product_id=product_id) #InventoryProducts.objects.filter(product_id=product_id)
+    if  product.is_avaliable:
+        product.is_avaliable = False
+        product.save()
+    elif  not product.is_avaliable:
+        product.is_avaliable = True
+        product.save()
+
+    return Response(data={'response': 'success', 'message': 'product updated succesfully'}, status=status.HTTP_200_OK)
 
 class InvoiceProductCreateView(ProductCreationView):
     queryset = InventoryInvoices
@@ -93,3 +97,43 @@ class InvoiceProductListView(ProductListingView):
 class InvoiceProductDeleteView(ProductDeleteView):
     queryset = InventoryInvoices
     serializer_class = ProductInvoicerSerializer
+
+
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny,])
+def view_product_for_payment(request, product_id):
+    user_id = request.query_params.get('user_id', None)
+    if user_id is None:
+        raise ValidationError('The request made to this server was bad')
+
+    data = OrderedDict()
+    
+    
+    
+    try:
+        user = get_user_model().objects.get(user_id=user_id)
+        product = get_object_or_404(InventoryProducts, product_id=product_id)
+    except get_user_model().DoesNotExist:
+       
+        raise  ValidationError('The request made to this server was bad')
+    except InventoryProducts.DoestNotExist:
+       raise  ValidationError('The request made to this server was bad')
+
+
+
+    user_detail = {
+        'business_name': user.buiness_info.business_name,
+        'business_number': user.buiness_info.business_number,
+        'business_address': user.buiness_info.business_address,
+        'business_email': user.email
+    }
+
+
+    
+    
+    data['user'] = user_detail
+    data['product_detail'] = product
+    print(data)
+    return Response(data)

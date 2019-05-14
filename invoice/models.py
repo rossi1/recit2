@@ -17,7 +17,7 @@ class Invoice(models.Model):
     created = models.DateField(auto_now_add=True)
     due_date = models.DateField(default=timezone.now)
     is_pending = models.BooleanField(default=True)
-    
+    #approved  = models.BooleanField(default=False)
     data = JSONField()
     description = models.TextField(blank=True)
     link = models.URLField()
@@ -32,7 +32,7 @@ class Invoice(models.Model):
     client_id = models.ForeignKey('ClientInfo', on_delete=models.CASCADE, related_name='auto_reminder', null=True)
 
     project_amount = models.DecimalField(decimal_places=2, max_digits=20)
-    
+    #set_payment = models.CharField(max_length=20, blank=True)
     currency =  models.CharField(max_length=20)
     tax =  models.DecimalField(decimal_places=2, max_digits=20, null=True, blank=True)
     shipping_fee =  models.DecimalField(decimal_places=2, max_digits=20, null=True, blank=True)

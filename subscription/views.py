@@ -41,7 +41,7 @@ class CreateSubscriptionPlan(APIView):
 
     def post(self, request, **kwargs):
         fetch_plan = request.query_params.get('sub_plan',  None)
-        tx_code = request.query_params.get('tf_code',  None)
+        tx_code = request.data.get('tf_code',  None)
         if fetch_plan is not None:
             create_customer = self.create_customer(tx_code)
             if fetch_plan ==  SubscriptionPlanModel.freelance_plan.value:
@@ -68,6 +68,12 @@ class CreateSubscriptionPlan(APIView):
             source=token)
         return create
 
+    @staticmethod
+    def subscribe_plan(customer_id, plan_id):
+        return stripe.Subscription.create(
+            customer=customer_id,
+            items=[{"plan": plan_id}])
+
     def update_user_plan_to_freelancing(self, customer_id):
         subscribe_plan = self.subscribe_plan(customer_id.id, getattr(settings, 'FREELANCE_PLAN_ID'))
         sub_start_date = datetime.datetime.utcfromtimestamp(subscribe_plan['current_period_start'])
@@ -77,11 +83,7 @@ class CreateSubscriptionPlan(APIView):
         subscription_start_date=sub_start_date.date(), subscription_end_date=sub_end_date.date(),
         customer_card_id=customer_id, subscription_id=subscribe_plan['id'])
 
-    @staticmethod
-    def subscribe_plan(customer_id, plan_id):
-        return stripe.Subscription.create(
-            customer=customer_id,
-            items=[{"plan": plan_id}])
+
      
        
     def update_user_plan_to_business(self, customer_id):

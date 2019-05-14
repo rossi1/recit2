@@ -233,6 +233,12 @@ PRODUCT_INVENTORY_INVOICE_LINK = 'http://recit.herokuapp.com/c/product/invoice'
 
 FREEMIUM_PLAN_LIMIT = 6
 
+# stripe plan id 
+
+BUSINESS_PLAN_ID = 'prod_F4B9hzFjwPNlhZ'
+FREEMIUM_PLAN_ID = 'prod_F3nceCPKRnycAr'
+FREELANCE_PLAN_ID = 'prod_F1udqRMU83IQne'
+
 
 """
 cloudinary.config( 

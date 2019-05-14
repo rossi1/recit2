@@ -16,7 +16,7 @@ class InventoryProducts(models.Model):
     link = models.URLField()
     price = models.DecimalField(decimal_places=2, max_digits=20, default=Decimal('0.00'))
     tax = models.DecimalField(decimal_places=2, max_digits=20, null=True, blank=True)
-    weight = models.FloatField()
+    weight = models.CharField(max_length=50)
 
     class Meta:
         ordering = ('-created',)

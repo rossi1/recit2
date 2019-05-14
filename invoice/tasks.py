@@ -74,30 +74,6 @@ def schedule_reminder(remind):
 
 
 
-"""
-@periodic_task(
-    run_every=(timedelta(minutes=30)),
-    name='task_send_automated_reminder',
-    ignore_result=True
-)
-def send_automated_reminder():
-    reminder = AutomatedReminder.objects.all()
-    for remind in reminder:
-        if not remind.cancel:
-            link = remind.invoice.link
-            message_body = 'invoice link {}'.format(link)
-            if remind.medium.lower() == 'sms':
-                send_sms(message_body, remind.invoice.client_phone_number)
-            elif remind.medium.lower() == 'email':
-                
-                _send_email.delay('Reminder', message_body,  remind.invoice.client_email)
-            
-            elif remind.medium.lower() == 'emailsms':
-                send_sms.delay(message_body, remind.invoice.client_phone_number)
-                _send_email.delay('Reminder', message_body,  remind.invoice.client_email)
-
-"""
-
 @periodic_task(
     run_every=(crontab(hour=7, minute=30)),
     name='task_send_automated_reminder',

@@ -1,7 +1,7 @@
 import json
 from enum import Enum
 from collections import OrderedDict
-from datetime import datetime
+import datetime
 
 from django.contrib.auth import authenticate, get_user_model
 from django.core import signing
@@ -10,6 +10,7 @@ from django.core.mail import send_mail
 from django.urls import reverse
 from django.core.serializers.json import DjangoJSONEncoder
 from django.conf import settings
+from django.db.models import Q
 
 
 from twilio.rest import Client
@@ -34,6 +35,7 @@ from accounts.authentication import JwtAuthentication
 from .models import Invoice,  ClientInfo, AutomatedReminder
 from .serializer import InvoiceSerializer, ClientSerializer, AutomatedReminderSerializer
 from .tasks import send_sms, _send_email
+from .permission import IsNotFreemiumUser
 
 
 class Medium(Enum):
@@ -116,7 +118,7 @@ def invoice_data_with__no_client(invoice, exclude=False):
 
 class CreateInvoice(CreateAPIView):
     permission_classes = (IsAuthenticated,)
-    #authentication_classes = (SessionAuthentication,)
+    authentication_classes = (SessionAuthentication,)
     queryset = Invoice
     serializer_class = InvoiceSerializer
 
@@ -126,12 +128,12 @@ class CreateInvoice(CreateAPIView):
         
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        #encode_payment = self.encode_payment_data(**serializer.validated_data)
+        
         client = self.get_client_id(client_id)
 
         if client != 0:
-            if request.user.subscription_plan.is_freemium:
-                verify_user_status = self.verify_user_monthly_invoice()
+            if request.user.subscription_plan.subscription_type == 'freemium_plan':
+                verify_user_status = self.verify_user_monthly_recurring_invoice()
                 if verify_user_status:
                     generate_link = self.generate_invoice_link(serializer.validated_data['invoice_id'], request.user.user_id)
                     self.perform_create(serializer, generate_link, client_id=client)
@@ -141,8 +143,7 @@ class CreateInvoice(CreateAPIView):
                     return Response(data={
                     'status': 'failed', 'message': 'Exeeceded monthly limit'}, status=status.HTTP_400_BAD_REQUEST)
 
-                
-
+            
             
             generate_link = self.generate_invoice_link(serializer.validated_data['invoice_id'], request.user.user_id)
             self.perform_create(serializer, generate_link, client_id=client)
@@ -152,8 +153,8 @@ class CreateInvoice(CreateAPIView):
             
 
         else:
-            if request.user.subscription_plan.is_freemium:
-                verify_user_status = self.verify_user_monthly_invoice()
+            if request.user.subscription_plan.subscription_type == 'freemium_plan':
+                verify_user_status = self.verify_user_monthly_recurring_invoice()
                 if verify_user_status:
                     generate_link = self.generate_invoice_link(serializer.validated_data['invoice_id'], request.user.user_id)
                     self.perform_create(serializer, generate_link, client_id=client)
@@ -218,14 +219,17 @@ class CreateInvoice(CreateAPIView):
             instance.save(link=link)
  
     def generate_invoice_link(self, invoice_id, user_id):
-        #link = getattr('settings', 'LINK_URL')
+        
         link = getattr(settings, 'LINK_URL')
         url = '{}/{}/?user_id={}'.format(link, invoice_id, user_id)
         
         return url
     
-    def verify_user_monthly_invoice(self):
-        invoice_count = Invoice.objects.filter(user=self.request.user, created__month=datetime.today().month).values('created').annotate(count=Count('pk'))
+    def verify_user_monthly_recurring_invoice(self):
+        end_date = self.request.user.subscription_plan.sub_end_date
+        start_date = self.request.user.subscription_plan.sub_start_date
+        
+        invoice_count = Invoice.objects.filter(Q(invoice_type=getattr(settings, 'RECURRING_WEEKLY')) |  Q(invoice_type=getattr(settings, 'RECURRING_DAILY')) | Q(invoice_type=getattr(settings, 'RECURRING_MONTHLY')), user=self.request.user, created__range=[start_date, end_date]).values('created').annotate(count=Count('pk'))
         print(invoice_count)
 
         if not invoice_count.exists():
@@ -235,7 +239,7 @@ class CreateInvoice(CreateAPIView):
             
             return False
         return True
-        
+       
     
 
 class ViewPendingInvoice(ListAPIView):
@@ -392,7 +396,7 @@ def view_data(request, encoded_data):
 
 class CreateAutomatedReminder(CreateAPIView):
     #authentication_classes = (SessionAuthentication,)
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (IsAuthenticated, IsNotFreemiumUser)
     queryset = AutomatedReminder
     serializer_class = AutomatedReminderSerializer
 
@@ -466,7 +470,7 @@ class CreateAutomatedReminder(CreateAPIView):
 
 
 @api_view(["DELETE"])
-@permission_classes([IsAuthenticated,])
+@permission_classes([IsAuthenticated, IsNotFreemiumUser])
 def cancel_reminder(request, invoice_id):
     invoice = Invoice.objects.get(invoice_id__iexact=invoice_id)
     invoice.can_create_reminder = True
@@ -532,8 +536,7 @@ def view_invoice_for_payment(request, invoice_id):
         'business_email': user.email
     }
 
-    #invoice = get_object_or_404(Invoice, invoice_id=invoice_id)
-    #invoice_detail = invoice_data(invoice, exclude=True)
+    
     try:
         invoice_detail = invoice_data_with_client(invoice, exclude=True)
     except AttributeError:

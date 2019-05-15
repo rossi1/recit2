@@ -19,7 +19,7 @@ from rest_framework.views import APIView
 
 
 from .models  import SubscriptionPlan
-from .utils import subscribe_plan
+from .utils import subscribe_stripe_plan
 
 
 
@@ -74,7 +74,7 @@ class CreateSubscriptionPlan(APIView):
 
 
     def update_user_plan_to_freelancing(self, customer_id):
-        subscribe_plan = subscribe_plan(customer_id.id, getattr(settings, 'FREELANCE_PLAN_ID'))
+        subscribe_plan = subscribe_stripe_plan(customer_id.id, getattr(settings, 'FREELANCE_PLAN_ID'))
         sub_start_date = datetime.datetime.utcfromtimestamp(subscribe_plan.current_period_start)
         sub_end_date = datetime.datetime.utcfromtimestamp(subscribe_plan.current_period_end)
         subscription_type = SubscriptionPlanModel.freelance_plan.value
@@ -86,7 +86,7 @@ class CreateSubscriptionPlan(APIView):
      
        
     def update_user_plan_to_business(self, customer_id):
-        subscribe_plan = subscribe_plan(customer_id.id, getattr(settings, 'BUSINESS_PLAN_ID'))
+        subscribe_plan = subscribe_stripe_plan(customer_id.id, getattr(settings, 'BUSINESS_PLAN_ID'))
         sub_start_date = datetime.datetime.utcfromtimestamp(subscribe_plan.current_period_start)
         sub_end_date = datetime.datetime.utcfromtimestamp(subscribe_plan.current_period_end)
         subscription_type = SubscriptionPlanModel.business_plan.value
@@ -95,7 +95,7 @@ class CreateSubscriptionPlan(APIView):
         customer_id=customer_id, subscription_id=subscribe_plan.id)
 
     def update_user_plan_to_freemium(self, customer_id):
-        subscribe_plan = subscribe_plan(customer_id.id, getattr(settings, 'FREEMIUM_PLAN_ID'))
+        subscribe_plan = subscribe_stripe_plan(customer_id.id, getattr(settings, 'FREEMIUM_PLAN_ID'))
         sub_start_date = datetime.datetime.utcfromtimestamp(subscribe_plan.current_period_start)
         sub_end_date = datetime.datetime.utcfromtimestamp(subscribe_plan.current_period_end)
         subscription_type = SubscriptionPlanModel.freemium_plan.value
@@ -111,5 +111,12 @@ class CreateSubscriptionPlan(APIView):
 @permission_classes([IsAuthenticated])
 def cancel_subscription_plan(request):
    stripe.Subscription.delete(request.user.subscription_id)
-   subscribe_plan(request.user.customer_id, getattr(settings, 'FREEMIUM_PLAN_ID'))
+   freemium_plan = subscribe_stripe_plan(request.user.customer_id, getattr(settings, 'FREEMIUM_PLAN_ID'))
+   sub_start_date = datetime.datetime.utcfromtimestamp(freemium_plan.current_period_start)
+   sub_end_date = datetime.datetime.utcfromtimestamp(freemium_plan.current_period_end)
+   subscription_type = SubscriptionPlanModel.freemium_plan.value
+   SubscriptionPlan.objects.filter(plan_id=request.user).update(subscription_type=subscription_type,
+   subscription_start_date=sub_start_date.date(), 
+   subscription_end_date=sub_end_date.date(),
+   subscription_id=freemium_plan.id)
    return Response(data={'status': 'success'}, status=status.HTTP_200_OK)

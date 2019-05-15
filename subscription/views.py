@@ -43,19 +43,19 @@ class CreateSubscriptionPlan(APIView):
         fetch_plan = request.query_params.get('sub_plan',  None)
         tx_code = request.data.get('tf_code',  None)
         if fetch_plan is not None:
-            create_customer = self.create_customer(tx_code)
+            #create_customer = self.create_customer(tx_code)
             if fetch_plan ==  SubscriptionPlanModel.freelance_plan.value:
 
-                self.update_user_plan_to_freelancing(create_customer)
+                self.update_user_plan_to_freelancing('cus_F1vznWGNy8kXKz')
                 return Response(data={'status': 'success'}, status=status.HTTP_200_OK)
         
                
             elif fetch_plan == SubscriptionPlanModel.business_plan.value:
-                self.update_user_plan_to_business(create_customer)
+                self.update_user_plan_to_business('cus_F1vznWGNy8kXKz')
                 return Response(data={'status': 'success'}, status=status.HTTP_200_OK)
 
             else:
-                self.update_user_plan_to_freemium(create_customer)
+                self.update_user_plan_to_freemium('cus_F1vznWGNy8kXKz')
                 return Response(data={'status': 'success'}, status=status.HTTP_200_OK)
 
                
@@ -87,7 +87,7 @@ class CreateSubscriptionPlan(APIView):
      
        
     def update_user_plan_to_business(self, customer_id):
-        subscribe_plan = self.subscribe_plan(customer_id.id, getattr(settings, 'BUSINESS_PLAN_ID'))
+        subscribe_plan = self.subscribe_plan(customer_id, getattr(settings, 'BUSINESS_PLAN_ID'))
         sub_start_date = datetime.datetime.utcfromtimestamp(subscribe_plan['current_period_start'])
         sub_end_date = datetime.datetime.utcfromtimestamp(subscribe_plan['current_period_end'])
         subscription_type = SubscriptionPlanModel.business_plan.value

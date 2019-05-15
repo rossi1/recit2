@@ -2,7 +2,6 @@ from django.dispatch import receiver
 from django.db.models.signals import post_save
 from django.conf import settings
 
-from subscription.models import SubscriptionPlan
 
 from .models import BusinessInfo
 

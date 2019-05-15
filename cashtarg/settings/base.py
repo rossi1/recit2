@@ -235,9 +235,9 @@ FREEMIUM_PLAN_LIMIT = 6
 
 # stripe plan id 
 
-BUSINESS_PLAN_ID = 'prod_F4B9hzFjwPNlhZ'
-FREEMIUM_PLAN_ID = 'prod_F3nceCPKRnycAr'
-FREELANCE_PLAN_ID = 'prod_F1udqRMU83IQne'
+BUSINESS_PLAN_ID = 'plan_F4BBu1NgWJJpmI'
+FREEMIUM_PLAN_ID = 'plan_F3ndLBPyWNBFHV'
+FREELANCE_PLAN_ID = 'plan_F1uxsxSFIkvDCd'
 
 
 """

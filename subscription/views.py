@@ -72,37 +72,37 @@ class CreateSubscriptionPlan(APIView):
     def subscribe_plan(customer_id, plan_id):
         return stripe.Subscription.create(
             customer=customer_id,
-            items=[{"plan": 'freelancing_plan'}])
+            items=[{"plan": plan_id}])
 
     def update_user_plan_to_freelancing(self, customer_id):
-        subscribe_plan = self.subscribe_plan(customer_id.id, getattr(settings, 'FREELANCE_PLAN_ID'))
-        sub_start_date = datetime.datetime.utcfromtimestamp(subscribe_plan['current_period_start'])
-        sub_end_date = datetime.datetime.utcfromtimestamp(subscribe_plan['current_period_end'])
+        subscribe_plan = self.subscribe_plan(customer_id, getattr(settings, 'FREELANCE_PLAN_ID'))
+        sub_start_date = datetime.datetime.utcfromtimestamp(subscribe_plan.current_period_start)
+        sub_end_date = datetime.datetime.utcfromtimestamp(subscribe_plan.current_period_end)
         subscription_type = SubscriptionPlanModel.freelance_plan.value
         return SubscriptionPlan.objects.create(plan_id=self.request.user, subscription_type=subscription_type,
         subscription_start_date=sub_start_date.date(), subscription_end_date=sub_end_date.date(),
-        customer_id=customer_id, subscription_id=subscribe_plan['id'])
+        customer_id=customer_id, subscription_id=subscribe_plan.id)
 
 
      
        
     def update_user_plan_to_business(self, customer_id):
         subscribe_plan = self.subscribe_plan(customer_id, getattr(settings, 'BUSINESS_PLAN_ID'))
-        sub_start_date = datetime.datetime.utcfromtimestamp(subscribe_plan['current_period_start'])
-        sub_end_date = datetime.datetime.utcfromtimestamp(subscribe_plan['current_period_end'])
+        sub_start_date = datetime.datetime.utcfromtimestamp(subscribe_plan.current_period_start)
+        sub_end_date = datetime.datetime.utcfromtimestamp(subscribe_plan.current_period_end)
         subscription_type = SubscriptionPlanModel.business_plan.value
         return SubscriptionPlan.objects.create(plan_id=self.request.user, subscription_type=subscription_type, 
         subscription_start_date=sub_start_date.date(), subscription_end_date=sub_end_date.date(),
-        customer_card_id=customer_id, subscription_id=subscribe_plan['id'])
+        customer_id=customer_id, subscription_id=subscribe_plan.id)
 
     def update_user_plan_to_freemium(self, customer_id):
-        subscribe_plan = self.subscribe_plan(customer_id.id, getattr(settings, 'FREEMIUM_PLAN_ID'))
-        sub_start_date = datetime.datetime.utcfromtimestamp(subscribe_plan['current_period_start'])
-        sub_end_date = datetime.datetime.utcfromtimestamp(subscribe_plan['current_period_end'])
+        subscribe_plan = self.subscribe_plan(customer_id, getattr(settings, 'FREEMIUM_PLAN_ID'))
+        sub_start_date = datetime.datetime.utcfromtimestamp(subscribe_plan.current_period_start)
+        sub_end_date = datetime.datetime.utcfromtimestamp(subscribe_plan.current_period_end)
         subscription_type = SubscriptionPlanModel.freemium_plan.value
         return SubscriptionPlan.objects.create(plan_id=self.request.user, subscription_type=subscription_type,
         subscription_start_date=sub_start_date.date(), subscription_end_date=sub_end_date.date(),
-        customer_card_id=customer_id, subscription_id=subscribe_plan['id'])
+        customer_id=customer_id, subscription_id=subscribe_plan.id)
 
        
     

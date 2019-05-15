@@ -19,8 +19,9 @@ from rest_framework.views import APIView
 
 
 from .models  import SubscriptionPlan
+from .utils import subscribe_plan
 
-stripe.api_key = 'sk_test_wkwaWE7YeaKbYZd5Yz5dpbrF'
+
 
 
 
@@ -43,19 +44,20 @@ class CreateSubscriptionPlan(APIView):
         fetch_plan = request.query_params.get('sub_plan',  None)
         tx_code = request.data.get('tf_code',  None)
         if fetch_plan is not None:
-            #create_customer = self.create_customer(tx_code)
+            create_customer = self.create_customer(tx_code)
+            cu = 'cus_F1vznWGNy8kXKz'
             if fetch_plan ==  SubscriptionPlanModel.freelance_plan.value:
 
-                self.update_user_plan_to_freelancing('cus_F1vznWGNy8kXKz')
+                self.update_user_plan_to_freelancing(create_customer)
                 return Response(data={'status': 'success'}, status=status.HTTP_200_OK)
         
                
             elif fetch_plan == SubscriptionPlanModel.business_plan.value:
-                self.update_user_plan_to_business('cus_F1vznWGNy8kXKz')
+                self.update_user_plan_to_business(create_customer)
                 return Response(data={'status': 'success'}, status=status.HTTP_200_OK)
 
             else:
-                self.update_user_plan_to_freemium('cus_F1vznWGNy8kXKz')
+                self.update_user_plan_to_freemium(create_customer)
                 return Response(data={'status': 'success'}, status=status.HTTP_200_OK)
 
                
@@ -68,14 +70,11 @@ class CreateSubscriptionPlan(APIView):
             source=token)
         return create
 
-    @staticmethod
-    def subscribe_plan(customer_id, plan_id):
-        return stripe.Subscription.create(
-            customer=customer_id,
-            items=[{"plan": plan_id}])
+    
+
 
     def update_user_plan_to_freelancing(self, customer_id):
-        subscribe_plan = self.subscribe_plan(customer_id, getattr(settings, 'FREELANCE_PLAN_ID'))
+        subscribe_plan = subscribe_plan(customer_id.id, getattr(settings, 'FREELANCE_PLAN_ID'))
         sub_start_date = datetime.datetime.utcfromtimestamp(subscribe_plan.current_period_start)
         sub_end_date = datetime.datetime.utcfromtimestamp(subscribe_plan.current_period_end)
         subscription_type = SubscriptionPlanModel.freelance_plan.value
@@ -87,7 +86,7 @@ class CreateSubscriptionPlan(APIView):
      
        
     def update_user_plan_to_business(self, customer_id):
-        subscribe_plan = self.subscribe_plan(customer_id, getattr(settings, 'BUSINESS_PLAN_ID'))
+        subscribe_plan = subscribe_plan(customer_id.id, getattr(settings, 'BUSINESS_PLAN_ID'))
         sub_start_date = datetime.datetime.utcfromtimestamp(subscribe_plan.current_period_start)
         sub_end_date = datetime.datetime.utcfromtimestamp(subscribe_plan.current_period_end)
         subscription_type = SubscriptionPlanModel.business_plan.value
@@ -96,7 +95,7 @@ class CreateSubscriptionPlan(APIView):
         customer_id=customer_id, subscription_id=subscribe_plan.id)
 
     def update_user_plan_to_freemium(self, customer_id):
-        subscribe_plan = self.subscribe_plan(customer_id, getattr(settings, 'FREEMIUM_PLAN_ID'))
+        subscribe_plan = subscribe_plan(customer_id.id, getattr(settings, 'FREEMIUM_PLAN_ID'))
         sub_start_date = datetime.datetime.utcfromtimestamp(subscribe_plan.current_period_start)
         sub_end_date = datetime.datetime.utcfromtimestamp(subscribe_plan.current_period_end)
         subscription_type = SubscriptionPlanModel.freemium_plan.value
@@ -106,12 +105,11 @@ class CreateSubscriptionPlan(APIView):
 
        
     
-        
-    @staticmethod
-    def trial_end_date():
-        today_date = date.today()
-        trial_end_date = today_date + relativedelta(months=+1)
-        return trial_end_date
-        
-
     
+        
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def cancel_subscription_plan(request):
+   stripe.Subscription.delete(request.user.subscription_id)
+   subscribe_plan(request.user.customer_id, getattr(settings, 'FREEMIUM_PLAN_ID'))
+   return Response(data={'status': 'success'}, status=status.HTTP_200_OK)

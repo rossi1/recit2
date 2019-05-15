@@ -72,7 +72,7 @@ class CreateSubscriptionPlan(APIView):
     def subscribe_plan(customer_id, plan_id):
         return stripe.Subscription.create(
             customer=customer_id,
-            items=[{"plan": plan_id}])
+            items=[{"plan": "prod_F4B9hzFjwPNlhZ"}])
 
     def update_user_plan_to_freelancing(self, customer_id):
         subscribe_plan = self.subscribe_plan(customer_id.id, getattr(settings, 'FREELANCE_PLAN_ID'))

@@ -119,4 +119,4 @@ def cancel_subscription_plan(request):
    subscription_start_date=sub_start_date.date(), 
    subscription_end_date=sub_end_date.date(),
    subscription_id=freemium_plan.id)
-   return Response(data={'status': 'success'}, status=status.HTTP_200_O
+   return Response(data={'status': 'success'}, status=status.HTTP_200_OK)

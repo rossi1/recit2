@@ -1,6 +1,10 @@
 from collections import OrderedDict
+import json
+
+
 
 from django.conf import settings
+from django.core.serializers.json import DjangoJSONEncoder
 from django.contrib.auth import get_user_model
 
 from rest_framework.response import Response
@@ -135,6 +139,7 @@ def view_product_for_payment(request, product_id):
     
     data['user'] = user_detail
     product_serializer = ProductSerializer(product, many=True)
-    data['product_detail'] = product_serializer
+    to_json = json.dumps({'data': product}, cls=DjangoJSONEncoder)
+    data['product_detail'] = to_json
     print(data)
     return Response(data)

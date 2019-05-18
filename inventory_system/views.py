@@ -138,8 +138,8 @@ def view_product_for_payment(request, product_id):
     
     
     data['user'] = user_detail
-    product_serializer = ProductSerializer(product, many=True)
+    prods = ProductSerializerLising(product, many=True)
     to_json = json.dumps({'data': product}, cls=DjangoJSONEncoder)
-    data['product_detail'] = to_json
+    data['product_detail'] = prods
     print(data)
     return Response(data)

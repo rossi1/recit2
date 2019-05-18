@@ -118,7 +118,7 @@ def view_product_for_payment(request, product_id):
     
     try:
         user = get_user_model().objects.get(user_id=user_id)
-        product = InventoryProducts.objects.filter(product_id=product_id)
+        product = InventoryProducts.objects.filter(product_id=product_id).values()
     except get_user_model().DoesNotExist:
        
         raise  ValidationError('The request made to this server was bad')

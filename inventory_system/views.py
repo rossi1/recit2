@@ -6,6 +6,7 @@ from django.forms.models import model_to_dict
 from django.conf import settings
 from django.core.serializers.json import DjangoJSONEncoder
 from django.contrib.auth import get_user_model
+from django.core import serializers
 
 from rest_framework.response import Response
 from rest_framework.decorators import permission_classes, authentication_classes, api_view
@@ -140,6 +141,6 @@ def view_product_for_payment(request, product_id):
     data['user'] = user_detail
     prods = ProductSerializerLising(product, many=True)
     to_json = json.dumps({'data': product}, cls=DjangoJSONEncoder)
-    data['product_detail'] = model_to_dict(prods)
+    data['product_detail'] = serializers.serialize('json', prods) 
     print(data)
     return Response(data)

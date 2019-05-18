@@ -134,6 +134,7 @@ def view_product_for_payment(request, product_id):
     
     
     data['user'] = user_detail
-    data['product_detail'] = product
+    product_serializer = ProductSerializer(instance=product, many=True)
+    data['product_detail'] = product_serializer
     print(data)
     return Response(data)

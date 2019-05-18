@@ -2,7 +2,7 @@ from collections import OrderedDict
 import json
 
 
-
+from django.forms.models import model_to_dict
 from django.conf import settings
 from django.core.serializers.json import DjangoJSONEncoder
 from django.contrib.auth import get_user_model
@@ -140,6 +140,6 @@ def view_product_for_payment(request, product_id):
     data['user'] = user_detail
     prods = ProductSerializerLising(product, many=True)
     to_json = json.dumps({'data': product}, cls=DjangoJSONEncoder)
-    data['product_detail'] = prods
+    data['product_detail'] = model_to_dict(prods)
     print(data)
     return Response(data)

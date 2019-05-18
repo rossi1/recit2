@@ -228,7 +228,7 @@ AUTOMATED_REMINDER_TYPE = {
 }
 
 LINK_URL = 'http://recit.herokuapp.com/c/view-invoice'
-PRODUCT_INVENTORY_LINK = 'http://recit.herokuapp.com/c/product/'
+PRODUCT_INVENTORY_LINK = 'http://recit.herokuapp.com/c/product'
 PRODUCT_INVENTORY_INVOICE_LINK = 'http://recit.herokuapp.com/c/product/invoice'
 
 FREEMIUM_PLAN_LIMIT = 6

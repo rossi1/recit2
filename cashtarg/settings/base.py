@@ -174,12 +174,12 @@ EMAIL_HOST = 'smtp.sendgrid.net'
 EMAIL_HOST_USER = 'apikey'
 EMAIL_HOST_PASSWORD = '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'
 EMAIL_PORT = 587
+en = ''
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 
 JWT_SECRET = SECRET_KEY
 JWT_ALGORITHM = 'HS256'
 JWT_EXP_DELTA_MINTUES = 60
-
 
 CORS_ALLOW_HEADERS = (
     'accept',

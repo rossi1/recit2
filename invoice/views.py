@@ -258,7 +258,9 @@ class CreateInvoice(CreateAPIView):
         return url
     
     def verify_user_monthly_invoice(self):
-        invoice_count = Invoice.objects.filter(user=self.request.user, created__range=[self.request.user.subscription_plan.subscription_start_date, self.request.user.subscription_plan.subscription_end_date]).values('created').annotate(count=Count('pk'))
+        invoice_type = getattr(settings, 'ONE_TIME')
+        invoice_count = Invoice.objects.filter(user=self.request.user, invoice_type=invoice_type,
+        created__range=[self.request.user.subscription_plan.subscription_start_date, self.request.user.subscription_plan.subscription_end_date]).values('created').annotate(count=Count('pk'))
         print(invoice_count)
 
         if not invoice_count.exists():

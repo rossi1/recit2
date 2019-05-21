@@ -1,7 +1,12 @@
 from collections import OrderedDict
+import json
 
+
+from django.forms.models import model_to_dict
 from django.conf import settings
+from django.core.serializers.json import DjangoJSONEncoder
 from django.contrib.auth import get_user_model
+from django.core import serializers
 
 from rest_framework.response import Response
 from rest_framework.decorators import permission_classes, authentication_classes, api_view
@@ -114,7 +119,7 @@ def view_product_for_payment(request, product_id):
     
     try:
         user = get_user_model().objects.get(user_id=user_id)
-        product = get_object_or_404(InventoryProducts, product_id=product_id)
+        product = InventoryProducts.objects.filter(product_id=product_id)
     except get_user_model().DoesNotExist:
        
         raise  ValidationError('The request made to this server was bad')
@@ -134,7 +139,8 @@ def view_product_for_payment(request, product_id):
     
     
     data['user'] = user_detail
-    product_serializer = ProductSerializer(product, many=True)
-    data['product_detail'] = product_serializer
+    prods = ProductSerializerLising(product, many=True)
+    to_json = serializers.serialize('json', product) 
+    data['product_detail'] = to_json
     print(data)
     return Response(data)

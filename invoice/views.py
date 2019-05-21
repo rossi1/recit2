@@ -205,8 +205,18 @@ class CreateInvoice(CreateAPIView):
     @staticmethod
     def perform_invoice_delivery(generate_link, option, serializer='', client='', client_id=False):
         message_body = 'invoice link {}'.format(generate_link)
-        if not client_id:
+        if client_id:
+            if option != '' and option.lower() == Medium.email.value:
+                _send_email.delay('Invoice', message_body, client.client_email)
+            elif option != '' and option.lower() == Medium.sms.value and client.client_phone_number is not None:
+                send_sms.delay(generate_link, client.client_phone_number)
+            elif option != '' and option.lower() == Medium.emailsms.value:
+                _send_email.delay('Invoice', message_body, client.client_email)
+                send_sms.delay(generate_link, client.client_phone_number)
             
+            
+
+        else:
             if option != '' and option.lower() == Medium.email.value:
                 _send_email.delay('Invoice', message_body, serializer.validated_data['client_email'])
             elif option != '' and option.lower() == Medium.sms.value and serializer.validated_data['client_phone_number'] is not None:
@@ -215,15 +225,8 @@ class CreateInvoice(CreateAPIView):
             elif option != '' and option.lower() == Medium.emailsms.value:
                 _send_email.delay('Invoice', message_body, serializer.validated_data['client_email'])
                 send_sms.delay(generate_link, serializer.validated_data['client_phone_number'])
-
-        else:
-            if option != '' and option.lower() == Medium.email.value:
-                _send_email.delay('Invoice', message_body, client.client_email)
-            elif option != '' and option.lower() == Medium.sms.value and client.client_phone_number is not None:
-                send_sms.delay(generate_link, client.client_phone_number)
-            elif option != '' and option.lower() == Medium.emailsms.value:
-                _send_email.delay('Invoice', message_body, client.client_email)
-                send_sms.delay(generate_link, client.client_phone_number)
+         
+            
 
     
     @staticmethod

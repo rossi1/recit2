@@ -232,6 +232,7 @@ PRODUCT_INVENTORY_LINK = 'http://recit.herokuapp.com/c/product'
 PRODUCT_INVENTORY_INVOICE_LINK = 'http://recit.herokuapp.com/c/product/invoice'
 
 FREEMIUM_PLAN_LIMIT = 6
+FREELANCE_PLAN_LIMIT = 5
 
 # stripe plan id 
 

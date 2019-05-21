@@ -145,7 +145,7 @@ class CreateInvoice(CreateAPIView):
 
                 
             elif request.user.subscription_plan.subscription_type == SubscriptionPlanModel.freelance_plan.value:
-                verify_user_status = self.verify_user_monthly_invoice()
+                verify_user_status = self.verify_user_monthly_invoice(invoice_one_time=False)
                 if verify_user_status:
                     generate_link = self.generate_invoice_link(serializer.validated_data['invoice_id'], request.user.user_id)
                     self.perform_create(serializer, generate_link, client_id=client)
@@ -179,7 +179,7 @@ class CreateInvoice(CreateAPIView):
 
                 
             elif request.user.subscription_plan.subscription_type == SubscriptionPlanModel.freelance_plan.value:
-                verify_user_status = self.verify_user_monthly_invoice()
+                verify_user_status = self.verify_user_monthly_invoice(invoice_one_time=False)
                 if verify_user_status:
                     generate_link = self.generate_invoice_link(serializer.validated_data['invoice_id'], request.user.user_id)
                     self.perform_create(serializer, generate_link, client_id=client)
@@ -257,19 +257,31 @@ class CreateInvoice(CreateAPIView):
         
         return url
     
-    def verify_user_monthly_invoice(self):
-        invoice_type = getattr(settings, 'ONE_TIME')
-        invoice_count = Invoice.objects.filter(user=self.request.user, invoice_type=invoice_type,
-        created__range=[self.request.user.subscription_plan.subscription_start_date, self.request.user.subscription_plan.subscription_end_date]).values('created').annotate(count=Count('pk'))
+    def verify_user_monthly_invoice(self, invoice_one_time=True):
+        if invoice_one_time:
+            limit = settings.FREEMIUM_PLAN_LIMIT
+            invoice_type = getattr(settings, 'ONE_TIME')
+            invoice_count = Invoice.objects.filter(user=self.request.user, invoice_type=invoice_type,
+            created__range=[self.request.user.subscription_plan.subscription_start_date, self.request.user.subscription_plan.subscription_end_date]).values('created').annotate(count=Count('pk'))
+        else:
+            limit = settings.FREELANCE_PLAN_LIMIT
+            invoice_type = [getattr(settings, 'RECURRING_WEEKLY'), getattr(settings, 'RECURRING_MONTHLY'), getattr(settings, 'RECURRING_DIALY')]
+            invoice_count = Invoice.objects.filter(user=self.request.user, invoice_type__in=invoice_type,
+            created__range=[self.request.user.subscription_plan.subscription_start_date, self.request.user.subscription_plan.subscription_end_date]).values('created').annotate(count=Count('pk'))
+
+        
         print(invoice_count)
 
         if not invoice_count.exists():
             return True
-
-        if invoice_count[0]['count'] == settings.FREEMIUM_PLAN_LIMIT:
+            
+    
+        if invoice_count[0]['count'] == limit:
             
             return False
         return True
+
+        
         
     
 

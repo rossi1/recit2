@@ -16,7 +16,7 @@ def subscribe_stripe_plan(customer_id, plan_id):
     return stripe.Subscription.create(
         customer=customer_id,
         items=[{"plan": plan_id}],
-        trial_end=convert_datetime_to_unix_timestamp())
+        trial_period_days=30)
 
 
 

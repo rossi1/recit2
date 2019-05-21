@@ -163,6 +163,7 @@ class CreateInvoice(CreateAPIView):
 
 
                         
+        else:
             if request.user.subscription_plan.subscription_type == SubscriptionPlanModel.freemium_plan.value:
                 verify_user_status = self.verify_user_monthly_invoice()
                 if verify_user_status:

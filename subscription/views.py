@@ -95,6 +95,8 @@ class CreateSubscriptionPlan(APIView):
         customer_id=customer_id.id, subscription_id=subscribe_plan.id)
 
     def update_user_plan_to_freemium(self):
+        #subscribe_plan = subscribe_stripe_plan(customer_id.id, getattr(settings, 'FREEMIUM_PLAN_ID'))
+        subscription_type = SubscriptionPlanModel.freemium_plan.value
         return SubscriptionPlan.objects.create(plan_id=self.request.user, subscription_type=subscription_type,
         subscription_start_date=date.today(), subscription_end_date=extend_subscription_date(),
         subscription_id=subscribe_plan.id)

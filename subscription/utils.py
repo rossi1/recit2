@@ -18,6 +18,13 @@ def subscribe_stripe_plan(customer_id, plan_id):
         items=[{"plan": plan_id}],
         trial_period_days=30)
 
+def upgrade_and_downgrade_stripe_plan(subscription_id, plan_id):
+        subscription = stripe.Subscription.modify(subscription_id,
+        cancel_at_period_end=False,
+        items=[{'id': subscription['items']['data'][0].id,'plan': plan_id,
+        }])
+        return subscription
+
 
 
 def extend_subscription_date():

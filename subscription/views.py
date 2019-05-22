@@ -108,12 +108,12 @@ class CreateSubscriptionPlan(APIView):
 @permission_classes([IsAuthenticated])
 def cancel_subscription_plan(request):
    stripe.Subscription.delete(request.user.subscription_id)
-   freemium_plan = subscribe_stripe_plan(request.user.customer_id, getattr(settings, 'FREEMIUM_PLAN_ID'))
-   sub_start_date = datetime.datetime.utcfromtimestamp(freemium_plan.current_period_start)
-   sub_end_date = datetime.datetime.utcfromtimestamp(freemium_plan.current_period_end)
+   #freemium_plan = subscribe_stripe_plan(request.user.customer_id, getattr(settings, 'FREEMIUM_PLAN_ID'))
+   sub_start_date = date.today()
+   sub_end_date = extend_subscription_date()
    subscription_type = SubscriptionPlanModel.freemium_plan.value
    SubscriptionPlan.objects.filter(plan_id=request.user).update(subscription_type=subscription_type,
    subscription_start_date=sub_start_date.date(), 
    subscription_end_date=sub_end_date.date(),
-   subscription_id=freemium_plan.id)
+   subscription_id='')
    return Response(data={'status': 'success'}, status=status.HTTP_200_OK)

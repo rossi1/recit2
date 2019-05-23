@@ -145,11 +145,17 @@ class CreateInvoice(CreateAPIView):
 
                 
             elif request.user.subscription_plan.subscription_type == SubscriptionPlanModel.freelance_plan.value:
+                if serializer.validated_data['invoice_type'].lower() == settings.settings.ONE_TIME:
+                    generate_link = self.generate_invoice_link(serializer.validated_data['invoice_id'], request.user.user_id)
+                    self.perform_create(serializer, generate_link, client_id=client)
+                    self.perform_invoice_delivery(generate_link, option, client=client, client_id=True)
+
                 verify_user_status = self.verify_user_monthly_invoice(invoice_one_time=False)
                 if verify_user_status:
                     generate_link = self.generate_invoice_link(serializer.validated_data['invoice_id'], request.user.user_id)
                     self.perform_create(serializer, generate_link, client_id=client)
                     self.perform_invoice_delivery(generate_link, option, client=client, client_id=True)
+                    
 
                 else:
                     return Response(data={
@@ -179,6 +185,10 @@ class CreateInvoice(CreateAPIView):
 
                 
             elif request.user.subscription_plan.subscription_type == SubscriptionPlanModel.freelance_plan.value:
+                if serializer.validated_data['invoice_type'].lower() == settings.settings.ONE_TIME:
+                    generate_link = self.generate_invoice_link(serializer.validated_data['invoice_id'], request.user.user_id)
+                    self.perform_create(serializer, generate_link, client_id=client)
+                    self.perform_invoice_delivery(generate_link, option, client=client, client_id=True)
                 verify_user_status = self.verify_user_monthly_invoice(invoice_one_time=False)
                 if verify_user_status:
                     generate_link = self.generate_invoice_link(serializer.validated_data['invoice_id'], request.user.user_id)
@@ -255,7 +265,7 @@ class CreateInvoice(CreateAPIView):
         link = getattr(settings, 'LINK_URL')
         url = '{}/{}/?user_id={}'.format(link, invoice_id, user_id)
         
-        return url
+        return url  
     
     def verify_user_monthly_invoice(self, invoice_one_time=True):
         if invoice_one_time:

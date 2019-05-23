@@ -265,9 +265,12 @@ class CreateInvoice(CreateAPIView):
             created__range=[self.request.user.subscription_plan.subscription_start_date, self.request.user.subscription_plan.subscription_end_date]).values('created').annotate(count=Count('pk'))
         else:
             limit = settings.FREELANCE_PLAN_LIMIT
+            invoice_one_time = getattr(settings, 'ONE_TIME')
             invoice_type = [getattr(settings, 'RECURRING_WEEKLY'), getattr(settings, 'RECURRING_MONTHLY'), getattr(settings, 'RECURRING_DAILY')]
             invoice_count = Invoice.objects.filter(user=self.request.user, invoice_type__in=invoice_type,
-            created__range=[self.request.user.subscription_plan.subscription_start_date, self.request.user.subscription_plan.subscription_end_date]).values('created').annotate(count=Count('pk'))
+            created__range=[self.request.user.subscription_plan.subscription_start_date, 
+            self.request.user.subscription_plan.subscription_end_date]).exclude(
+                invoice_type=invoice_one_time).values('created').annotate(count=Count('pk'))
 
         
         print(invoice_count)

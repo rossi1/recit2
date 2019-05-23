@@ -149,17 +149,15 @@ class CreateInvoice(CreateAPIView):
                     generate_link = self.generate_invoice_link(serializer.validated_data['invoice_id'], request.user.user_id)
                     self.perform_create(serializer, generate_link, client_id=client)
                     self.perform_invoice_delivery(generate_link, option, client=client, client_id=True)
-
-                verify_user_status = self.verify_user_monthly_invoice(invoice_one_time=False)
-                if verify_user_status:
-                    generate_link = self.generate_invoice_link(serializer.validated_data['invoice_id'], request.user.user_id)
-                    self.perform_create(serializer, generate_link, client_id=client)
-                    self.perform_invoice_delivery(generate_link, option, client=client, client_id=True)
-                    
-
                 else:
-                    return Response(data={
-                    'status': 'failed', 'message': 'Exeeceded monthly limit'}, status=status.HTTP_400_BAD_REQUEST)
+                    verify_user_status = self.verify_user_monthly_invoice(invoice_one_time=False)
+                    if verify_user_status:
+                        generate_link = self.generate_invoice_link(serializer.validated_data['invoice_id'], request.user.user_id)
+                        self.perform_create(serializer, generate_link, client_id=client)
+                        self.perform_invoice_delivery(generate_link, option, client=client, client_id=True)
+                    
+                    else:
+                        return Response(data={'status': 'failed', 'message': 'Exeeceded monthly limit'}, status=status.HTTP_400_BAD_REQUEST)
 
             else:
                 generate_link = self.generate_invoice_link(serializer.validated_data['invoice_id'], request.user.user_id)
@@ -189,14 +187,14 @@ class CreateInvoice(CreateAPIView):
                     generate_link = self.generate_invoice_link(serializer.validated_data['invoice_id'], request.user.user_id)
                     self.perform_create(serializer, generate_link, client_id=client)
                     self.perform_invoice_delivery(generate_link, option, client=client, client_id=True)
-                verify_user_status = self.verify_user_monthly_invoice(invoice_one_time=False)
-                if verify_user_status:
-                    generate_link = self.generate_invoice_link(serializer.validated_data['invoice_id'], request.user.user_id)
-                    self.perform_create(serializer, generate_link, client_id=client)
-                    self.perform_invoice_delivery(generate_link, option, serializer=serializer)
                 else:
-                    return Response(data={
-                    'status': 'failed', 'message': 'Exeeceded monthly limit'}, status=status.HTTP_400_BAD_REQUEST)
+                    verify_user_status = self.verify_user_monthly_invoice(invoice_one_time=False)
+                    if verify_user_status:
+                        generate_link = self.generate_invoice_link(serializer.validated_data['invoice_id'], request.user.user_id)
+                        self.perform_create(serializer, generate_link, client_id=client)
+                        self.perform_invoice_delivery(generate_link, option, serializer=serializer)
+                    else:
+                        return Response(data={'status': 'failed', 'message': 'Exeeceded monthly limit'}, status=status.HTTP_400_BAD_REQUEST)
 
             else:
                 generate_link = self.generate_invoice_link(serializer.validated_data['invoice_id'], request.user.user_id)

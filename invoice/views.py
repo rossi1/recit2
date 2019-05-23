@@ -145,7 +145,7 @@ class CreateInvoice(CreateAPIView):
 
                 
             elif request.user.subscription_plan.subscription_type == SubscriptionPlanModel.freelance_plan.value:
-                if serializer.validated_data['invoice_type'].lower() == settings.settings.ONE_TIME:
+                if serializer.validated_data['invoice_type'].lower() == settings.ONE_TIME:
                     generate_link = self.generate_invoice_link(serializer.validated_data['invoice_id'], request.user.user_id)
                     self.perform_create(serializer, generate_link, client_id=client)
                     self.perform_invoice_delivery(generate_link, option, client=client, client_id=True)
@@ -185,7 +185,7 @@ class CreateInvoice(CreateAPIView):
 
                 
             elif request.user.subscription_plan.subscription_type == SubscriptionPlanModel.freelance_plan.value:
-                if serializer.validated_data['invoice_type'].lower() == settings.settings.ONE_TIME:
+                if serializer.validated_data['invoice_type'].lower() == settings.ONE_TIME:
                     generate_link = self.generate_invoice_link(serializer.validated_data['invoice_id'], request.user.user_id)
                     self.perform_create(serializer, generate_link, client_id=client)
                     self.perform_invoice_delivery(generate_link, option, client=client, client_id=True)

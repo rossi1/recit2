@@ -12,11 +12,17 @@ def convert_datetime_to_unix_timestamp():
         timestamp = dt.replace(tzinfo=timezone.utc).timestamp()
         return timestamp
 
-def subscribe_stripe_plan(customer_id, plan_id):
-    return stripe.Subscription.create(
-        customer=customer_id,
-        items=[{"plan": plan_id}],
-        trial_period_days=30)
+def subscribe_stripe_plan(customer_id, plan_id, switch=False):
+        if not switch:
+                return stripe.Subscription.create(
+                        customer=customer_id,
+                        items=[{"plan": plan_id}],
+                        trial_period_days=30)
+        else:
+                return stripe.Subscription.create(
+                        customer=customer_id,
+                        items=[{"plan": plan_id}])
+    
 
 def upgrade_and_downgrade_stripe_plan(subscription_id, plan_id):
         subscription = stripe.Subscription.modify(subscription_id,

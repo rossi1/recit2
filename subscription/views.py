@@ -113,7 +113,79 @@ def cancel_subscription_plan(request):
    sub_end_date = extend_subscription_date()
    subscription_type = SubscriptionPlanModel.freemium_plan.value
    SubscriptionPlan.objects.filter(plan_id=request.user).update(subscription_type=subscription_type,
-   subscription_start_date=sub_start_date.date(), 
-   subscription_end_date=sub_end_date.date(),
+   subscription_start_date=sub_start_date, 
+   subscription_end_date=sub_end_date,
    subscription_id='')
    return Response(data={'status': 'success'}, status=status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+class SwitchSubscriptionPlan(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request, kwargs):
+        #
+        get_plan = request.query_params.get('sub_plan',  None)
+
+        if get_plan is not None:
+        
+            if get_plan == SubscriptionPlanModel.freelance_plan.value:
+                stripe.Subscription.delete(request.user.subscription_plan.subscription_id)
+                subscription_type = SubscriptionPlanModel.freelance_plan.value
+                try:
+                    subscribe_plan = subscribe_stripe_plan(request.user.subscription_plan.subscription_id, getattr(settings, 'FREELANCE_PLAN_ID'))
+                except stripe.error.CardError as e:
+                    return Response({
+                        "status": "failed", "message": "Unable to charge card please update card"
+                    }, status=status.HTTP_400_BAD_REQUEST)
+                else:
+                    sub_start_date = datetime.datetime.utcfromtimestamp(subscribe_plan.current_period_start)
+                    sub_end_date = datetime.datetime.utcfromtimestamp(subscribe_plan.current_period_end)
+                    SubscriptionPlan.objects.filter(plan_id=request.user).update(subscription_type=subscription_type,
+                    subscription_start_date=sub_start_date.date(), 
+                    subscription_end_date=sub_end_date.date(), subscription_id=subscribe_plan.id)
+                    return Response(data={'status': 'success'}, status=status.HTTP_200_OK)
+
+            elif get_plan == SubscriptionPlanModel.business_plan.value:
+                stripe.Subscription.delete(request.user.subscription_plan.subscription_id)
+                subscription_type = SubscriptionPlanModel.business_plan.value
+                try:
+                    
+                    subscribe_plan = subscribe_stripe_plan(request.user.subscription_plan.subscription_id, getattr(settings, 'BUSINESS_PLAN_ID'))
+                except stripe.error.CardError as e:
+                    return Response({
+                        "error": "failed", "message": "Unable to charge card please update card"
+                    }, status=status.HTTP_400_BAD_REQUEST)
+                else:
+                    sub_start_date = datetime.datetime.utcfromtimestamp(subscribe_plan.current_period_start)
+                    sub_end_date = datetime.datetime.utcfromtimestamp(subscribe_plan.current_period_end)
+                    SubscriptionPlan.objects.filter(plan_id=request.user).update(subscription_type=subscription_type,
+                    subscription_start_date=sub_start_date.date(), 
+                    subscription_end_date=sub_end_date.date(), subscription_id=subscribe_plan.id)
+                    return Response(data={'status': 'success'}, status=status.HTTP_200_OK)
+            else:
+                sub_start_date = date.today()
+                sub_end_date = extend_subscription_date()
+                SubscriptionPlan.objects.filter(plan_id=request.user).update(subscription_type=subscription_type,
+                subscription_start_date=sub_start_date.date(), 
+                subscription_end_date=sub_end_date.date(),
+                subscription_id='')
+                return Response(data={'status': 'success'}, status=status.HTTP_200_OK)
+
+
+class UpdateCustomerCardToken(APIView):
+    PermissionError = (IsAuthenticated,)
+
+    def post(self, request, kwargs):
+        request_body = request.data.get('tf_code',  None)
+        if request_body is not None:
+            stripe.Customer.modify(request.user.subscription_plan.customer_id,
+            source=request_body)
+            return Response(
+            {"status": "success", "message": 
+            "No parameters found"}, status=status.HTTP_200_OK
+        )
+        return Response(
+            {"status": "error", "message": 
+            "No parameters found"}, status=status.HTTP_400_BAD_REQUEST
+        )

@@ -468,7 +468,7 @@ class CreateAutomatedReminder(CreateAPIView):
             try:
                 AutomatedReminder.objects.get(invoice=invoice)
             except AutomatedReminder.DoesNotExist:
-                if serializer.validated_data['medium'] == Medium.sms:
+                if serializer.validated_data['medium'] == Medium.sms.value:
                     try:
                         invoice.client_id.client_phone_number
                     except AttributeError:
@@ -477,7 +477,7 @@ class CreateAutomatedReminder(CreateAPIView):
                     else:
                         if  invoice.client_id.client_phone_number is None:
                             self.reminder_cant_be_created()
-                elif serializer.validated_data['medium'] == Medium.email:
+                elif serializer.validated_data['medium'] == Medium.email.value:
                     try:
                         invoice.client_id.client_email
                     except AttributeError:
@@ -487,7 +487,7 @@ class CreateAutomatedReminder(CreateAPIView):
                         if invoice.client_id.client_email:
                             self.reminder_cant_be_created()
                    
-                elif serializer.validated_data['medium'] == Medium.emailsms :
+                elif serializer.validated_data['medium'] == Medium.emailsms.value :
                     try:
                         invoice.client_id.client_email 
                         invoice.client_id.client_phone_number
@@ -505,7 +505,7 @@ class CreateAutomatedReminder(CreateAPIView):
                     invoice.can_create_reminder = False
                     invoice.save()
                     return Response(data='Reminder created', status=status.HTTP_201_CREATED)
-                elif reminder_type == ReminderType.everyday:
+                elif reminder_type == ReminderType.everyday.value:
                         self.perform_create(serializer, invoice)
                         invoice.can_create_reminder = False
                         invoice.save()

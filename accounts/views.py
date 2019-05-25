@@ -81,18 +81,18 @@ class LoginView(GenericAPIView):
                     if account_plan == SubscriptionPlanModel.freelance_plan.value:
                         invoice_type = getattr(settings, 'ONE_TIME')
                         invoice_count = Invoice.objects.filter(user=user, invoice_type=invoice_type,
-                        created__range=[user.subscription_plan.subscription_start_date, user.subscription_plan.subscription_end_date]).values('created').annotate(count=Count('pk'))
+                        created__range=[user.subscription_plan.subscription_start_date, user.subscription_plan.subscription_end_date]).exclude(is_pending=False).values('created').annotate(count=Count('pk'))
                     elif account_plan == SubscriptionPlanModel.business_plan.value:
                         invoice_one_time = getattr(settings, 'ONE_TIME')
                         invoice_type = [getattr(settings, 'RECURRING_WEEKLY'), getattr(settings, 'RECURRING_MONTHLY'), getattr(settings, 'RECURRING_DAILY')]
                         invoice_count = Invoice.objects.filter(user=user, invoice_type__in=invoice_type,
                         created__range=[user.subscription_plan.subscription_start_date, 
                         user.subscription_plan.subscription_end_date]).exclude(
-                            invoice_type=invoice_one_time).values('created').annotate(count=Count('pk'))
+                            is_pending=False).values('created').annotate(count=Count('pk'))
                     else:
                         invoice_count = Invoice.objects.filter(user=user,
                         created__range=[user.subscription_plan.subscription_start_date, 
-                        user.subscription_plan.subscription_end_date]).values('created').annotate(count=Count('pk'))
+                        user.subscription_plan.subscription_end_date]).exclude(is_pending=False).values('created').annotate(count=Count('pk'))
 
 
 

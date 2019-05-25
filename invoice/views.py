@@ -278,7 +278,7 @@ class CreateInvoice(CreateAPIView):
             invoice_count = Invoice.objects.filter(user=self.request.user, invoice_type__in=invoice_type,
             created__range=[self.request.user.subscription_plan.subscription_start_date, 
             self.request.user.subscription_plan.subscription_end_date]).exclude(
-                invoice_type=invoice_one_time).values('created').annotate(count=Count('pk'))
+                is_pending=False).values('created').annotate(count=Count('pk'))
 
         
         print(invoice_count)

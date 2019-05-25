@@ -10,6 +10,7 @@ import stripe
 
 
 from django.conf import settings
+from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 
 from rest_framework.response import Response
@@ -211,7 +212,7 @@ def my_webhook_view(request):
     return Response(status.HTTP_400_BAD_REQUEST)
   except stripe.error.SignatureVerificationError as e:
     # Invalid signature
-    return Response(status.HTTP_400_BAD_REQUEST)
+    return HttpResponse(status=400)
 
   else:
        # Handle the event
@@ -251,9 +252,9 @@ def my_webhook_view(request):
     
      
     else:
-        return Response(status=status.HTTP_400_BAD_REQUEST)
+        return HttpResponse(400)
     
 
-  return Response(status=status.HTTP_200_OK)
+  return HttpResponse(200)
 
    

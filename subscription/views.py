@@ -139,7 +139,7 @@ class SwitchSubscriptionPlan(APIView):
                 stripe.Subscription.delete(request.user.subscription_plan.subscription_id)
                 subscription_type = SubscriptionPlanModel.freelance_plan.value
                 try:
-                    subscribe_plan = subscribe_stripe_plan(request.user.subscription_plan.subscription_id, getattr(settings, 'FREELANCE_PLAN_ID'))
+                    subscribe_plan = subscribe_stripe_plan(request.user.subscription_plan.subscription_id, getattr(settings, 'FREELANCE_PLAN_ID'), switch=True)
                 except stripe.error.CardError as e:
                     return Response({
                         "status": "failed", "message": "Unable to charge card please update card"
@@ -157,7 +157,7 @@ class SwitchSubscriptionPlan(APIView):
                 subscription_type = SubscriptionPlanModel.business_plan.value
                 try:
                     
-                    subscribe_plan = subscribe_stripe_plan(request.user.subscription_plan.subscription_id, getattr(settings, 'BUSINESS_PLAN_ID'))
+                    subscribe_plan = subscribe_stripe_plan(request.user.subscription_plan.subscription_id, getattr(settings, 'BUSINESS_PLAN_ID'), switch=True)
                 except stripe.error.CardError as e:
                     return Response({
                         "error": "failed", "message": "Unable to charge card please update card"
@@ -231,28 +231,20 @@ def my_webhook_view(request):
                 subscription_id=subscription_id
 
             )
+            
     elif event.type == 'invoice.payment_failed':
         payment_intent = event.data.object
         customer_id = payment_intent.customer
         cus_email = payment_intent.customer_email
         subscription_type = SubscriptionPlanModel.freemium_plan.value
-
         sub_start_date = date.today()
         sub_end_date = extend_subscription_date()
-
         SubscriptionPlan.objects.filter(customer_id=customer_id).update(subscription_start_date=sub_start_date, 
-                subscription_end_date=sub_end_date,
-                subscription_id='',
-                subscription_type=subscription_type
-
-            )
-
+        subscription_end_date=sub_end_date,
+        subscription_id='',
+        subscription_type=subscription_type)
         _send_email("Your Subscription plan to Recit Failed",  "Failed to subscribe to plan", cus_email)
-
     
-     
-    else:
-        return HttpResponse(400)
     
 
   return HttpResponse(200)

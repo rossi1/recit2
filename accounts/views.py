@@ -88,11 +88,11 @@ class LoginView(GenericAPIView):
                         invoice_count = Invoice.objects.filter(user=user, invoice_type__in=invoice_type,
                         created__range=[user.subscription_plan.subscription_start_date, 
                         user.subscription_plan.subscription_end_date]).exclude(
-                            invoice_type=invoice_one_time).values('created').annotate(count=Count('pk'))
+                            invoice_type=invoice_one_time).annotate(count=Count('pk'))
                     else:
                         invoice_count = Invoice.objects.filter(user=user,
                         created__range=[user.subscription_plan.subscription_start_date, 
-                        user.subscription_plan.subscription_end_date]).values('created').annotate(count=Count('pk'))
+                        user.subscription_plan.subscription_end_date]).annotate(count=Count('pk'))
 
 
 

@@ -119,7 +119,6 @@ def cancel_subscription_plan(request):
    return Response(data={'status': 'success'}, status=status.HTTP_200_OK)
 
 
-@api_view(['GET'])
 class SwitchSubscriptionPlan(APIView):
     permission_classes = (IsAuthenticated,)
 
@@ -189,3 +188,7 @@ class UpdateCustomerCardToken(APIView):
             {"status": "error", "message": 
             "No parameters found"}, status=status.HTTP_400_BAD_REQUEST
         )
+
+
+def stripe_webhook_view(request):
+    pass

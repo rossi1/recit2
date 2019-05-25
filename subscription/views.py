@@ -233,7 +233,7 @@ def my_webhook_view(request):
     elif event.type == 'invoice.payment_failed':
         payment_intent = event.data.object
         customer_id = payment_intent.customer
-        email = payment_intent.customer_email
+        cus_email = payment_intent.customer_email
         subscription_type = SubscriptionPlanModel.freemium_plan.value
 
         sub_start_date = date.today()
@@ -246,8 +246,7 @@ def my_webhook_view(request):
 
             )
 
-        _send_email(message="Your Subscription plan to Recit Failed", 
-        "Failed to subscribe to plan", email)
+        _send_email("Your Subscription plan to Recit Failed",  "Failed to subscribe to plan", cus_email)
 
     
      

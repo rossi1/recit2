@@ -25,7 +25,7 @@ def _send_email(subject, message_body, email):
 
 def extend_subscription_date():
     today_date = date.today()
-    sub_expiry_date = today_date + relativedelta(days=+1)
+    sub_expiry_date = today_date + relativedelta(months=+1)
     return sub_expiry_date
 
 

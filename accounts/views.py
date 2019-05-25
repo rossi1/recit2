@@ -5,6 +5,7 @@ from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail import send_mail
 from django.contrib.auth import login
+from django.db.models import Count
 
 
 from rest_framework.generics import CreateAPIView, GenericAPIView, RetrieveUpdateAPIView
@@ -16,6 +17,8 @@ from rest_framework.permissions import IsAuthenticated
 
 
 from subscription.models import SubscriptionPlan
+from subscription.views import SubscriptionPlanModel
+from invoice.models  import Invoice
 
 
 from .serializer import UserSerializer, LoginSerializer, PasswordResetSerializer,  PasswordSerializer, BusinessSerializer
@@ -26,9 +29,6 @@ from .models import BusinessInfo
 
 
 
-class SubscriptionPlanModel(Enum):
-    freelance_plan = 'freelance_plan'
-    business_plan = 'business_plan'
 
 
 class SignupView(CreateAPIView):
@@ -78,8 +78,25 @@ class LoginView(GenericAPIView):
                     account_plan = None
                 else:
                     account_plan = account_plan.subscription_type
+                    if account_plan == SubscriptionPlanModel.freelance_plan.value:
+                        invoice_type = getattr(settings, 'ONE_TIME')
+                        invoice_count = Invoice.objects.filter(user=user, invoice_type=invoice_type,
+                        created__range=[account_plan.subscription_start_date, account_plan.subscription_end_date]).values('created').annotate(count=Count('pk'))
+                    elif account_plan == SubscriptionPlanModel.business_plan.value:
+                        invoice_one_time = getattr(settings, 'ONE_TIME')
+                        invoice_type = [getattr(settings, 'RECURRING_WEEKLY'), getattr(settings, 'RECURRING_MONTHLY'), getattr(settings, 'RECURRING_DAILY')]
+                        invoice_count = Invoice.objects.filter(user=user, invoice_type__in=invoice_type,
+                        created__range=[account_plan.subscription_start_date, 
+                        account_plan.subscription_plan.subscription_end_date]).exclude(
+                            invoice_type=invoice_one_time).values('created').annotate(count=Count('pk'))
+                    else:
+                        invoice_count = Invoice.objects.filter(user=user,
+                        created__range=[account_plan.subscription_start_date, 
+                        account_plan.subscription_plan.subscription_end_date]).values('created').annotate(count=Count('pk'))
 
-                return Response(data={'token': token, 'has_uploaded_business_account': user.buiness_info.has_uploaded_bank_details, 'pk': user.pk,  'account_type': {'account_plan': account_plan, 'trial': getattr(account_plan, 'is_trial', None)}}, 
+
+
+                return Response(data={'token': token, 'has_uploaded_business_account': user.buiness_info.has_uploaded_bank_details, 'pk': user.pk,  'account_type': {'account_plan': account_plan, 'invoice_count': invoice_count}}, 
                     status=status.HTTP_200_OK)
                    
 

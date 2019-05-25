@@ -385,6 +385,7 @@ def invoice_detail_view(request, invoice_id=None):
 
 
 class CreateClient(CreateAPIView):
+    # write a custom permission later
     permission_classes = (IsAuthenticated,)
     queryset = ClientInfo
     serializer_class = ClientSerializer

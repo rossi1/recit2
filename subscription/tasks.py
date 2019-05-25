@@ -20,8 +20,8 @@ from .models import SubscriptionPlan
 
     
 @shared_task
-def _send_email(message, message_body, email):
-    return send_mail(message, message_body, settings.EMAIL_HOST_USER, [email], fail_silently=False)
+def _send_email(subject, message_body, email):
+    return send_mail(subject, message_body, settings.EMAIL_HOST_USER, [email], fail_silently=False)
 
 def extend_subscription_date():
     today_date = date.today()

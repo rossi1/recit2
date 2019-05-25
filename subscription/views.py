@@ -1,13 +1,16 @@
 from enum import Enum
-import datetime
 from datetime import date
+import datetime
 
-import stripe
 from dateutil.relativedelta import *
+import stripe
+
+
 
 
 
 from django.conf import settings
+from django.views.decorators.csrf import csrf_exempt
 
 from rest_framework.response import Response
 from rest_framework.decorators import permission_classes, authentication_classes, api_view
@@ -20,7 +23,10 @@ from rest_framework.views import APIView
 
 from .models  import SubscriptionPlan
 from .utils import subscribe_stripe_plan, extend_subscription_date
+from .tasks import _send_email
 
+
+endpoint_secret = 'whsec_Po9VYbT7FbzvhGdjVlg7TB6lGokUJNIk'
 
 
 
@@ -190,5 +196,65 @@ class UpdateCustomerCardToken(APIView):
         )
 
 
-def stripe_webhook_view(request):
-    pass
+@csrf_exempt
+def my_webhook_view(request):
+  payload = request.body
+  sig_header = request.META['HTTP_STRIPE_SIGNATURE']
+  event = None
+
+  try:
+    event = stripe.Webhook.construct_event(
+      payload, sig_header, endpoint_secret
+    )
+  except ValueError as e:
+    # Invalid payload
+    return Response(status.HTTP_400_BAD_REQUEST)
+  except stripe.error.SignatureVerificationError as e:
+    # Invalid signature
+    return Response(status.HTTP_400_BAD_REQUEST)
+
+  else:
+       # Handle the event
+    if event.type == 'payment_intent.succeeded':
+         # contains a stripe.PaymentIntent
+
+        payment_intent = event.data.object
+        
+        if payment_intent.billing_reason == "subscription_update":
+            customer_id = payment_intent.customer
+            sub_start_date = datetime.datetime.utcfromtimestamp(payment_intent.lines.data.period.start)
+            sub_end_date =  datetime.datetime.utcfromtimestamp(payment_intent.lines.data.period.start)
+            subscription_id = payment_intent.subscription
+            SubscriptionPlan.objects.filter(customer_id=customer_id).update(subscription_start_date=sub_start_date.date(), 
+                subscription_end_date=sub_end_date.date(),
+                subscription_id=subscription_id
+
+            )
+    elif event.type == 'invoice.payment_failed':
+        payment_intent = event.data.object
+        customer_id = payment_intent.customer
+        email = payment_intent.customer_email
+        subscription_type = SubscriptionPlanModel.freemium_plan.value
+
+        sub_start_date = date.today()
+        sub_end_date = extend_subscription_date()
+
+        SubscriptionPlan.objects.filter(customer_id=customer_id).update(subscription_start_date=sub_start_date, 
+                subscription_end_date=sub_end_date,
+                subscription_id='',
+                subscription_type=subscription_type
+
+            )
+
+        _send_email(message="Your Subscription plan to Recit Failed", 
+        "Failed to subscribe to plan", email)
+
+    
+     
+    else:
+        return Response(status=status.HTTP_400_BAD_REQUEST)
+    
+
+  return Response(status=status.HTTP_200_OK)
+
+   

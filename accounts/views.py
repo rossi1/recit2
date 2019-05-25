@@ -96,7 +96,7 @@ class LoginView(GenericAPIView):
 
 
 
-                return Response(data={'token': token, 'has_uploaded_business_account': user.buiness_info.has_uploaded_bank_details, 'pk': user.pk,  'account_type': {'account_plan': account_plan, 'invoice_count': invoice_count}}, 
+                return Response(data={'token': token, 'has_uploaded_business_account': user.buiness_info.has_uploaded_bank_details, 'pk': user.pk,  'account_type': {'account_plan': account_plan, 'invoice_count': invoice_count['count']}}, 
                     status=status.HTTP_200_OK)
                    
 

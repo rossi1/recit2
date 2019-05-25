@@ -81,22 +81,22 @@ class LoginView(GenericAPIView):
                     if account_plan == SubscriptionPlanModel.freelance_plan.value:
                         invoice_type = getattr(settings, 'ONE_TIME')
                         invoice_count = Invoice.objects.filter(user=user, invoice_type=invoice_type,
-                        created__range=[user.subscription_plan.subscription_start_date, user.subscription_plan.subscription_end_date]).annotate(count=Count('pk'))
+                        created__range=[user.subscription_plan.subscription_start_date, user.subscription_plan.subscription_end_date]).values('created').annotate(count=Count('pk'))
                     elif account_plan == SubscriptionPlanModel.business_plan.value:
                         invoice_one_time = getattr(settings, 'ONE_TIME')
                         invoice_type = [getattr(settings, 'RECURRING_WEEKLY'), getattr(settings, 'RECURRING_MONTHLY'), getattr(settings, 'RECURRING_DAILY')]
                         invoice_count = Invoice.objects.filter(user=user, invoice_type__in=invoice_type,
                         created__range=[user.subscription_plan.subscription_start_date, 
                         user.subscription_plan.subscription_end_date]).exclude(
-                            invoice_type=invoice_one_time).annotate(count=Count('pk'))
+                            invoice_type=invoice_one_time).values('created').annotate(count=Count('pk'))
                     else:
                         invoice_count = Invoice.objects.filter(user=user,
                         created__range=[user.subscription_plan.subscription_start_date, 
-                        user.subscription_plan.subscription_end_date]).annotate(count=Count('pk'))
+                        user.subscription_plan.subscription_end_date]).values('created').annotate(count=Count('pk'))
 
 
 
-                return Response(data={'token': token, 'has_uploaded_business_account': user.buiness_info.has_uploaded_bank_details, 'pk': user.pk,  'account_type': {'account_plan': account_plan, 'invoice_count': invoice_count}}, 
+                return Response(data={'token': token, 'has_uploaded_business_account': user.buiness_info.has_uploaded_bank_details, 'pk': user.pk,  'account_type': {'account_plan': account_plan, 'invoice_count': invoice_count.count}}, 
                     status=status.HTTP_200_OK)
                    
 

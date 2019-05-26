@@ -30,7 +30,7 @@ from .models import BusinessInfo
 
 
 
-
+stripe.api_key = 'sk_test_wkwaWE7YeaKbYZd5Yz5dpbrF'
 
 
 class SignupView(CreateAPIView):
@@ -97,8 +97,7 @@ class LoginView(GenericAPIView):
                     else:
                         invoice = Invoice.objects.filter(user=user,
                         created__range=[user.subscription_plan.subscription_start_date, 
-                        user.subscription_plan.subscription_end_date]).exclude(
-                is_pending=False).values('created').annotate(count=Count('pk'))
+                        user.subscription_plan.subscription_end_date]).exclude(is_pending=False).values('created').annotate(count=Count('pk'))
                         invoice_count = invoice[0]['count']
 
                     
@@ -115,8 +114,8 @@ class LoginView(GenericAPIView):
     @staticmethod
     def get_card_info(customer_id, card_token):
         customer = stripe.Customer.retrieve(customer_id)
-        card = customer.sources().retrieve(card_token)
-        return card['last4']
+        card = customer.sources.data[0]['last4']
+        return card
 
 
 class LogoutView(GenericAPIView):

@@ -53,14 +53,15 @@ class CreateSubscriptionPlan(APIView):
         if fetch_plan is not None:
             create_customer = self.create_customer(tx_code)
             cu = 'cus_F1vznWGNy8kXKz'
+           
             if fetch_plan ==  SubscriptionPlanModel.freelance_plan.value:
 
-                self.update_user_plan_to_freelancing(create_customer, tx_code)
+                self.update_user_plan_to_freelancing(create_customer)
                 return Response(data={'status': 'success'}, status=status.HTTP_200_OK)
         
                
             elif fetch_plan == SubscriptionPlanModel.business_plan.value:
-                self.update_user_plan_to_business(create_customer, tx_code)
+                self.update_user_plan_to_business(create_customer)
                 return Response(data={'status': 'success'}, status=status.HTTP_200_OK)
 
             else:
@@ -87,7 +88,7 @@ class CreateSubscriptionPlan(APIView):
         subscription_type = SubscriptionPlanModel.freelance_plan.value
         return SubscriptionPlan.objects.create(plan_id=self.request.user, subscription_type=subscription_type,
         subscription_start_date=sub_start_date.date(), subscription_end_date=sub_end_date.date(),
-        customer_id=customer_id.id, subscription_id=subscribe_plan.id, card_source=card)
+        customer_id=customer_id.id, subscription_id=subscribe_plan.id)
 
 
      
@@ -99,7 +100,7 @@ class CreateSubscriptionPlan(APIView):
         subscription_type = SubscriptionPlanModel.business_plan.value
         return SubscriptionPlan.objects.create(plan_id=self.request.user, subscription_type=subscription_type, 
         subscription_start_date=sub_start_date.date(), subscription_end_date=sub_end_date.date(),
-        customer_id=customer_id.id, subscription_id=subscribe_plan.id, card_source=card)
+        customer_id=customer_id.id, subscription_id=subscribe_plan.id)
 
     def update_user_plan_to_freemium(self):
         #subscribe_plan = subscribe_stripe_plan(customer_id.id, getattr(settings, 'FREEMIUM_PLAN_ID'))
@@ -208,7 +209,7 @@ class UpdateCustomerCardToken(APIView):
                 
                 
             return Response({"status": "success", "message":  "Card updated"}, status=status.HTTP_200_OK)
-            
+
         return Response(
             {"status": "error", "message": 
             "No parameters found"}, status=status.HTTP_400_BAD_REQUEST

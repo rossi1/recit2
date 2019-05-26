@@ -81,7 +81,7 @@ class CreateSubscriptionPlan(APIView):
     
 
 
-    def update_user_plan_to_freelancing(self, customer_id, card):
+    def update_user_plan_to_freelancing(self, customer_id):
         subscribe_plan = subscribe_stripe_plan(customer_id.id, getattr(settings, 'FREELANCE_PLAN_ID'))
         sub_start_date = datetime.datetime.utcfromtimestamp(subscribe_plan.current_period_start)
         sub_end_date = datetime.datetime.utcfromtimestamp(subscribe_plan.current_period_end)
@@ -93,7 +93,7 @@ class CreateSubscriptionPlan(APIView):
 
      
        
-    def update_user_plan_to_business(self, customer_id, card):
+    def update_user_plan_to_business(self, customer_id):
         subscribe_plan = subscribe_stripe_plan(customer_id.id, getattr(settings, 'BUSINESS_PLAN_ID'))
         sub_start_date = datetime.datetime.utcfromtimestamp(subscribe_plan.current_period_start)
         sub_end_date = datetime.datetime.utcfromtimestamp(subscribe_plan.current_period_end)

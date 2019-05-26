@@ -86,7 +86,7 @@ class LoginView(GenericAPIView):
                         invoice_type = getattr(settings, 'ONE_TIME')
                         invoice = Invoice.objects.filter(user=user, invoice_type=invoice_type,
                         created__range=[user.subscription_plan.subscription_start_date, user.subscription_plan.subscription_end_date]).exclude(is_pending=False).values('created').annotate(count=Count('pk'))
-                        invoice_count = invoice[0]['count']
+                        #invoice_count = invoice[0]['count']
                     elif account_plan == SubscriptionPlanModel.business_plan.value:
                         invoice_one_time = getattr(settings, 'ONE_TIME')
                         invoice_type = [getattr(settings, 'RECURRING_WEEKLY'), getattr(settings, 'RECURRING_MONTHLY'), getattr(settings, 'RECURRING_DAILY')]

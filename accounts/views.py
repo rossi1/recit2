@@ -78,7 +78,7 @@ class LoginView(GenericAPIView):
                     account_plan =  SubscriptionPlan.objects.get(plan_id=user)
                 except SubscriptionPlan.DoesNotExist:
                     account_plan = None
-                    invoice_count = None
+                    invoice_count = 0
                     last_card_no = None
                 else:
                     account_plan = account_plan.subscription_type
@@ -93,14 +93,19 @@ class LoginView(GenericAPIView):
                         invoice = Invoice.objects.filter(user=user, invoice_type__in=invoice_type,
                         created__range=[user.subscription_plan.subscription_start_date, 
                         user.subscription_plan.subscription_end_date]).exclude(is_pending=False).values('created').annotate(count=Count('pk'))
-                        invoice_count = invoice[0]['count']
+                        
                     else:
                         invoice = Invoice.objects.filter(user=user,
                         created__range=[user.subscription_plan.subscription_start_date, 
                         user.subscription_plan.subscription_end_date]).exclude(is_pending=False).values('created').annotate(count=Count('pk'))
+                        
+
+
+                    if not invoice_count.exists():
+                        invoice_count = 0
+                    else:
                         invoice_count = invoice[0]['count']
 
-                    
                     last_card_no = self.get_card_info(user.subscription_plan.customer_id, user.subscription_plan.card_source)
 
 

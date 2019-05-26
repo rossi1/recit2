@@ -15,6 +15,8 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 
+import stripe
+
 
 from subscription.models import SubscriptionPlan
 from subscription.views import SubscriptionPlanModel
@@ -76,32 +78,45 @@ class LoginView(GenericAPIView):
                     account_plan =  SubscriptionPlan.objects.get(plan_id=user)
                 except SubscriptionPlan.DoesNotExist:
                     account_plan = None
+                    invoice_count = None
+                    last_card_no = None
                 else:
                     account_plan = account_plan.subscription_type
                     if account_plan == SubscriptionPlanModel.freelance_plan.value:
                         invoice_type = getattr(settings, 'ONE_TIME')
-                        invoice_count = Invoice.objects.filter(user=user, invoice_type=invoice_type,
+                        invoice = Invoice.objects.filter(user=user, invoice_type=invoice_type,
                         created__range=[user.subscription_plan.subscription_start_date, user.subscription_plan.subscription_end_date]).exclude(is_pending=False).values('created').annotate(count=Count('pk'))
+                        invoice = invoice[0]['count']
                     elif account_plan == SubscriptionPlanModel.business_plan.value:
                         invoice_one_time = getattr(settings, 'ONE_TIME')
                         invoice_type = [getattr(settings, 'RECURRING_WEEKLY'), getattr(settings, 'RECURRING_MONTHLY'), getattr(settings, 'RECURRING_DAILY')]
-                        invoice_count = Invoice.objects.filter(user=user, invoice_type__in=invoice_type,
+                        invoice = Invoice.objects.filter(user=user, invoice_type__in=invoice_type,
                         created__range=[user.subscription_plan.subscription_start_date, 
                         user.subscription_plan.subscription_end_date]).exclude(
                             is_pending=False).values('created').annotate(count=Count('pk'))
+                        invoice_count = invoice[0]['count']
                     else:
-                        invoice_count = Invoice.objects.filter(user=user,
+                        invoice = Invoice.objects.filter(user=user,
                         created__range=[user.subscription_plan.subscription_start_date, 
                         user.subscription_plan.subscription_end_date]).exclude(is_pending=False).values('created').annotate(count=Count('pk'))
+                        invoice_count = invoice[0]['count']
+
+                    
+                    last_card_no = self.get_card_info(user.subscription_plan.customer_id, user.subscription_plan.card_source)
 
 
-
-                return Response(data={'token': token, 'has_uploaded_business_account': user.buiness_info.has_uploaded_bank_details, 'pk': user.pk,  'account_type': {'account_plan': account_plan, 'invoice_count': invoice_count[0]['count']}}, 
+                return Response(data={'token': token, 'has_uploaded_business_account': user.buiness_info.has_uploaded_bank_details, 'pk': user.pk,  'account_type': {'account_plan': account_plan, 'invoice_count': invoice_count, 'last_card_no': last_card_no}}, 
                     status=status.HTTP_200_OK)
                    
 
         else:
             return Response(serializer.errors)
+
+    @staticmethod
+    def get_card_info(customer_id, card_token):
+        customer = stripe.Customer.retrieve(customer_id)
+        card = customer.sources().retrieve(card_token)
+        return card['last4']
 
 
 class LogoutView(GenericAPIView):

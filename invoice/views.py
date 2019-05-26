@@ -270,7 +270,8 @@ class CreateInvoice(CreateAPIView):
             limit = settings.FREEMIUM_PLAN_LIMIT
             invoice_type = getattr(settings, 'ONE_TIME')
             invoice_count = Invoice.objects.filter(user=self.request.user, invoice_type=invoice_type,
-            created__range=[self.request.user.subscription_plan.subscription_start_date, self.request.user.subscription_plan.subscription_end_date]).values('created').annotate(count=Count('pk'))
+            created__range=[self.request.user.subscription_plan.subscription_start_date, self.request.user.subscription_plan.subscription_end_date]).exclude(
+                is_pending=True).values('created').annotate(count=Count('pk'))
         else:
             limit = settings.FREELANCE_PLAN_LIMIT
             invoice_one_time = getattr(settings, 'ONE_TIME')
@@ -278,7 +279,7 @@ class CreateInvoice(CreateAPIView):
             invoice_count = Invoice.objects.filter(user=self.request.user, invoice_type__in=invoice_type,
             created__range=[self.request.user.subscription_plan.subscription_start_date, 
             self.request.user.subscription_plan.subscription_end_date]).exclude(
-                is_pending=False).values('created').annotate(count=Count('pk'))
+                is_pending=True).values('created').annotate(count=Count('pk'))
 
         
         print(invoice_count)

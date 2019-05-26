@@ -55,12 +55,12 @@ class CreateSubscriptionPlan(APIView):
             cu = 'cus_F1vznWGNy8kXKz'
             if fetch_plan ==  SubscriptionPlanModel.freelance_plan.value:
 
-                self.update_user_plan_to_freelancing(create_customer)
+                self.update_user_plan_to_freelancing(create_customer, tx_code)
                 return Response(data={'status': 'success'}, status=status.HTTP_200_OK)
         
                
             elif fetch_plan == SubscriptionPlanModel.business_plan.value:
-                self.update_user_plan_to_business(create_customer)
+                self.update_user_plan_to_business(create_customer, tx_code)
                 return Response(data={'status': 'success'}, status=status.HTTP_200_OK)
 
             else:
@@ -80,26 +80,26 @@ class CreateSubscriptionPlan(APIView):
     
 
 
-    def update_user_plan_to_freelancing(self, customer_id):
+    def update_user_plan_to_freelancing(self, customer_id, card):
         subscribe_plan = subscribe_stripe_plan(customer_id.id, getattr(settings, 'FREELANCE_PLAN_ID'))
         sub_start_date = datetime.datetime.utcfromtimestamp(subscribe_plan.current_period_start)
         sub_end_date = datetime.datetime.utcfromtimestamp(subscribe_plan.current_period_end)
         subscription_type = SubscriptionPlanModel.freelance_plan.value
         return SubscriptionPlan.objects.create(plan_id=self.request.user, subscription_type=subscription_type,
         subscription_start_date=sub_start_date.date(), subscription_end_date=sub_end_date.date(),
-        customer_id=customer_id.id, subscription_id=subscribe_plan.id)
+        customer_id=customer_id.id, subscription_id=subscribe_plan.id, card_source=card)
 
 
      
        
-    def update_user_plan_to_business(self, customer_id):
+    def update_user_plan_to_business(self, customer_id, card):
         subscribe_plan = subscribe_stripe_plan(customer_id.id, getattr(settings, 'BUSINESS_PLAN_ID'))
         sub_start_date = datetime.datetime.utcfromtimestamp(subscribe_plan.current_period_start)
         sub_end_date = datetime.datetime.utcfromtimestamp(subscribe_plan.current_period_end)
         subscription_type = SubscriptionPlanModel.business_plan.value
         return SubscriptionPlan.objects.create(plan_id=self.request.user, subscription_type=subscription_type, 
         subscription_start_date=sub_start_date.date(), subscription_end_date=sub_end_date.date(),
-        customer_id=customer_id.id, subscription_id=subscribe_plan.id)
+        customer_id=customer_id.id, subscription_id=subscribe_plan.id, card_source=card)
 
     def update_user_plan_to_freemium(self):
         #subscribe_plan = subscribe_stripe_plan(customer_id.id, getattr(settings, 'FREEMIUM_PLAN_ID'))
@@ -136,10 +136,14 @@ class SwitchSubscriptionPlan(APIView):
         if get_plan is not None:
         
             if get_plan == SubscriptionPlanModel.freelance_plan.value:
-                stripe.Subscription.delete(request.user.subscription_plan.subscription_id)
+                if request.user.subscription_plan.subscription_type == SubscriptionPlanModel.freemium_plan.value:
+                    pass
+                else:
+                    stripe.Subscription.delete(request.user.subscription_plan.subscription_id)
+              
                 subscription_type = SubscriptionPlanModel.freelance_plan.value
                 try:
-                    subscribe_plan = subscribe_stripe_plan(request.user.subscription_plan.subscription_id, getattr(settings, 'FREELANCE_PLAN_ID'), switch=True)
+                    subscribe_plan = subscribe_stripe_plan(request.user.subscription_plan.customer_id, getattr(settings, 'FREELANCE_PLAN_ID'), switch=True)
                 except stripe.error.CardError as e:
                     return Response({
                         "status": "failed", "message": "Unable to charge card please update card"
@@ -153,11 +157,15 @@ class SwitchSubscriptionPlan(APIView):
                     return Response(data={'status': 'success'}, status=status.HTTP_200_OK)
 
             elif get_plan == SubscriptionPlanModel.business_plan.value:
-                stripe.Subscription.delete(request.user.subscription_plan.subscription_id)
+                if request.user.subscription_plan.subscription_type == SubscriptionPlanModel.freemium_plan.value:
+                    pass
+                else:
+                    stripe.Subscription.delete(request.user.subscription_plan.subscription_id)
+                #stripe.Subscription.delete(request.user.subscription_plan.subscription_id)
                 subscription_type = SubscriptionPlanModel.business_plan.value
                 try:
                     
-                    subscribe_plan = subscribe_stripe_plan(request.user.subscription_plan.subscription_id, getattr(settings, 'BUSINESS_PLAN_ID'), switch=True)
+                    subscribe_plan = subscribe_stripe_plan(request.user.subscription_plan.customer_id, getattr(settings, 'BUSINESS_PLAN_ID'), switch=True)
                 except stripe.error.CardError as e:
                     return Response({
                         "error": "failed", "message": "Unable to charge card please update card"
@@ -170,6 +178,11 @@ class SwitchSubscriptionPlan(APIView):
                     subscription_end_date=sub_end_date.date(), subscription_id=subscribe_plan.id)
                     return Response(data={'status': 'success'}, status=status.HTTP_200_OK)
             else:
+                subscription_type = SubscriptionPlanModel.freemium_plan.value
+                if request.user.subscription_plan.subscription_type == SubscriptionPlanModel.freemium_plan.value:
+                    pass
+                else:
+                    stripe.Subscription.delete(request.user.subscription_plan.subscription_id)
                 sub_start_date = date.today()
                 sub_end_date = extend_subscription_date()
                 SubscriptionPlan.objects.filter(plan_id=request.user).update(subscription_type=subscription_type,
@@ -185,12 +198,17 @@ class UpdateCustomerCardToken(APIView):
     def post(self, request, kwargs):
         request_body = request.data.get('tf_code',  None)
         if request_body is not None:
-            stripe.Customer.modify(request.user.subscription_plan.customer_id,
-            source=request_body)
-            return Response(
-            {"status": "success", "message": 
-            "No parameters found"}, status=status.HTTP_200_OK
-        )
+            if request.user.subscription_plan.subscription_type == SubscriptionPlanModel.freemium_plan.value:
+                create_customer = stripe.Customer.create(email=self.request.user.email, source=token)
+                SubscriptionPlan.objects.filter(plan_id=request.user).update(customer_id=create_customer.id)
+
+            else:
+                stripe.Customer.modify(request.user.subscription_plan.customer_id,
+                source=request_body)
+                
+                
+            return Response({"status": "success", "message":  "Card updated"}, status=status.HTTP_200_OK)
+            
         return Response(
             {"status": "error", "message": 
             "No parameters found"}, status=status.HTTP_400_BAD_REQUEST

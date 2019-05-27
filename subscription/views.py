@@ -131,6 +131,7 @@ class SwitchSubscriptionPlan(APIView):
     permission_classes = (IsAuthenticated,)
 
     def post(self, request, *args, **kwargs):
+    
         #
         get_plan = request.query_params.get('sub_plan',  None)
 

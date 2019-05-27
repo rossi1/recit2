@@ -130,7 +130,7 @@ def cancel_subscription_plan(request):
 class SwitchSubscriptionPlan(APIView):
     permission_classes = (IsAuthenticated,)
 
-    def get(self, request, kwargs):
+    def post(self, request, kwargs):
         #
         get_plan = request.query_params.get('sub_plan',  None)
 

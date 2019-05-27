@@ -106,7 +106,7 @@ class LoginView(GenericAPIView):
                     else:
                         invoice_count = invoice[0]['count']
 
-                    last_card_no = self.get_card_info(user.subscription_plan.customer_id, user.subscription_plan.card_source)
+                    last_card_no = self.get_card_info(user.subscription_plan.customer_id)
 
 
                 return Response(data={'token': token, 'has_uploaded_business_account': user.buiness_info.has_uploaded_bank_details, 'pk': user.pk,  'account_type': {'account_plan': account_plan, 'invoice_count': invoice_count, 'last_card_no': last_card_no}}, 
@@ -117,7 +117,7 @@ class LoginView(GenericAPIView):
             return Response(serializer.errors)
 
     @staticmethod
-    def get_card_info(customer_id, card_token):
+    def get_card_info(customer_id):
         customer = stripe.Customer.retrieve(customer_id)
         card = customer.sources.data[0]['last4']
         return card

@@ -102,11 +102,16 @@ class CreateSubscriptionPlan(APIView):
         subscription_start_date=sub_start_date.date(), subscription_end_date=sub_end_date.date(),
         customer_id=customer_id.id, subscription_id=subscribe_plan.id)
 
-    def update_user_plan_to_freemium(self):
-        #subscribe_plan = subscribe_stripe_plan(customer_id.id, getattr(settings, 'FREEMIUM_PLAN_ID'))
+    def update_user_plan_to_freemium(self, customer_id):
+        subscribe_plan = subscribe_stripe_plan(customer_id.id, getattr(settings, 'FREEMIUM_PLAN_ID'))
+        sub_start_date = datetime.datetime.utcfromtimestamp(subscribe_plan.current_period_start)
+        sub_end_date = datetime.datetime.utcfromtimestamp(subscribe_plan.current_period_end)
+        
         subscription_type = SubscriptionPlanModel.freemium_plan.value
         return SubscriptionPlan.objects.create(plan_id=self.request.user, subscription_type=subscription_type,
-        subscription_start_date=date.today(), subscription_end_date=extend_subscription_date())
+        customer_id=customer_id.id,subscription_id=subscribe_plan.id,
+
+        subscription_start_date=sub_start_date.date(), subscription_end_date=sub_end_date.date())
 
        
     
@@ -138,11 +143,13 @@ class SwitchSubscriptionPlan(APIView):
         if get_plan is not None:
         
             if get_plan == SubscriptionPlanModel.freelance_plan.value:
+                """
                 if request.user.subscription_plan.subscription_type == SubscriptionPlanModel.freemium_plan.value:
                     pass
                 else:
-                    stripe.Subscription.delete(request.user.subscription_plan.subscription_id)
-              
+                    
+                """
+                stripe.Subscription.delete(request.user.subscription_plan.subscription_id)
                 subscription_type = SubscriptionPlanModel.freelance_plan.value
                 try:
                     subscribe_plan = subscribe_stripe_plan(request.user.subscription_plan.customer_id, getattr(settings, 'FREELANCE_PLAN_ID'), switch=True)
@@ -159,11 +166,13 @@ class SwitchSubscriptionPlan(APIView):
                     return Response(data={'status': 'success'}, status=status.HTTP_200_OK)
 
             elif get_plan == SubscriptionPlanModel.business_plan.value:
+                """
                 if request.user.subscription_plan.subscription_type == SubscriptionPlanModel.freemium_plan.value:
                     pass
                 else:
                     stripe.Subscription.delete(request.user.subscription_plan.subscription_id)
-                #stripe.Subscription.delete(request.user.subscription_plan.subscription_id)
+                """ #stripe.Subscription.delete(request.user.subscription_plan.subscription_id)
+                stripe.Subscription.delete(request.user.subscription_plan.subscription_id)
                 subscription_type = SubscriptionPlanModel.business_plan.value
                 try:
                     
@@ -181,17 +190,27 @@ class SwitchSubscriptionPlan(APIView):
                     return Response(data={'status': 'success'}, status=status.HTTP_200_OK)
             else:
                 subscription_type = SubscriptionPlanModel.freemium_plan.value
+                """
                 if request.user.subscription_plan.subscription_type == SubscriptionPlanModel.freemium_plan.value:
                     pass
                 else:
                     stripe.Subscription.delete(request.user.subscription_plan.subscription_id)
-                sub_start_date = date.today()
-                sub_end_date = extend_subscription_date()
-                SubscriptionPlan.objects.filter(plan_id=request.user).update(subscription_type=subscription_type,
-                subscription_start_date=sub_start_date.date(), 
-                subscription_end_date=sub_end_date.date(),
-                subscription_id='')
-                return Response(data={'status': 'success'}, status=status.HTTP_200_OK)
+                """
+                stripe.Subscription.delete(request.user.subscription_plan.subscription_id)
+                try:
+                    
+                    subscribe_plan = subscribe_stripe_plan(request.user.subscription_plan.customer_id, getattr(settings, 'FREEMIUM_PLAN_ID'), switch=True)
+                except stripe.error.CardError as e:
+                    return Response({
+                        "error": "failed", "message": "Unable to charge card please update card"
+                    }, status=status.HTTP_400_BAD_REQUEST)
+                else:
+                    sub_start_date = datetime.datetime.utcfromtimestamp(subscribe_plan.current_period_start)
+                    sub_end_date = datetime.datetime.utcfromtimestamp(subscribe_plan.current_period_end)
+                    SubscriptionPlan.objects.filter(plan_id=request.user).update(subscription_type=subscription_type,
+                    subscription_start_date=sub_start_date.date(), subscription_end_date=sub_end_date.date(),
+                    subscription_id=subscribe_plan.id)
+                    return Response(data={'status': 'success'}, status=status.HTTP_200_OK)
 
 
 class UpdateCustomerCardToken(APIView):
@@ -200,13 +219,7 @@ class UpdateCustomerCardToken(APIView):
     def post(self, request, *args, **kwargs):
         request_body = request.data.get('tf_code',  None)
         if request_body is not None:
-            if request.user.subscription_plan.subscription_type == SubscriptionPlanModel.freemium_plan.value:
-                create_customer = stripe.Customer.create(email=self.request.user.email, source=token)
-                SubscriptionPlan.objects.filter(plan_id=request.user).update(customer_id=create_customer.id)
-
-            else:
-                stripe.Customer.modify(request.user.subscription_plan.customer_id,
-                source=request_body)
+            stripe.Customer.modify(request.user.subscription_plan.customer_id, source=request_body)
                 
                 
             return Response({"status": "success", "message":  "Card updated"}, status=status.HTTP_200_OK)

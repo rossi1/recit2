@@ -101,7 +101,7 @@ class LoginView(GenericAPIView):
                         
 
 
-                    if not invoice_count.exists():
+                    if not invoice.exists():
                         invoice_count = 0
                     else:
                         invoice_count = invoice[0]['count']

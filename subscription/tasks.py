@@ -29,7 +29,7 @@ def extend_subscription_date():
     return sub_expiry_date
 
 
-
+"""
 def update_freemium_plan_end_date():
     sub_type =  SubscriptionPlan.objects.filter(subscription_type='freemium_plan').all()
 
@@ -39,13 +39,12 @@ def update_freemium_plan_end_date():
             subs.subscription_end_date = extend_subscription_date()
             return subs.save()
 
-            
+"""          
 
 
 
 
-        
-        
+"""      
 @periodic_task(
     run_every=(crontab(hour=9, minute=30)),
     name='task_send_automated_reminder',
@@ -53,7 +52,7 @@ def update_freemium_plan_end_date():
 )
 def subscriptions_plans():
     update_freemium_plan_end_date()
-
+"""
                     
 
 

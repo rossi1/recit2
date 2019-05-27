@@ -65,18 +65,23 @@ class CreateSubscriptionPlan(APIView):
                 return Response(data={'status': 'success'}, status=status.HTTP_200_OK)
 
             else:
-                self.update_user_plan_to_freemium()
+                create_customer = self.create_customer()
+                self.update_user_plan_to_freemium(create_customer)
                 return Response(data={'status': 'success'}, status=status.HTTP_200_OK)
 
                
                 
         return  Response('Failed to get plan')
 
-    def create_customer(self, token):
-        create = stripe.Customer.create(
-            email=self.request.user.email,
+    def create_customer(self, token=None):
+        if token is not None:
+            create = stripe.Customer.create(email=self.request.user.email,
             source=token)
-        return create
+            return create
+        else:
+            create = stripe.Customer.create(email=self.request.user.email)
+            return create
+
 
     
 

@@ -108,7 +108,7 @@ class CreateSubscriptionPlan(APIView):
         customer_id=customer_id.id, subscription_id=subscribe_plan.id)
 
     def update_user_plan_to_freemium(self, customer_id):
-        subscribe_plan = subscribe_stripe_plan(customer_id.id, getattr(settings, 'FREEMIUM_PLAN_ID'))
+        subscribe_plan = subscribe_stripe_plan(customer_id.id, getattr(settings, 'FREEMIUM_PLAN_ID'), switch=True)
         sub_start_date = datetime.datetime.utcfromtimestamp(subscribe_plan.current_period_start)
         sub_end_date = datetime.datetime.utcfromtimestamp(subscribe_plan.current_period_end)
         

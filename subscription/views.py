@@ -130,7 +130,7 @@ def cancel_subscription_plan(request):
 class SwitchSubscriptionPlan(APIView):
     permission_classes = (IsAuthenticated,)
 
-    def get(self, request, kwargs):
+    def post(self, request, *args, **kwargs):
         #
         get_plan = request.query_params.get('sub_plan',  None)
 
@@ -196,7 +196,7 @@ class SwitchSubscriptionPlan(APIView):
 class UpdateCustomerCardToken(APIView):
     PermissionError = (IsAuthenticated,)
 
-    def post(self, request, kwargs):
+    def post(self, request, *args, **kwargs):
         request_body = request.data.get('tf_code',  None)
         if request_body is not None:
             if request.user.subscription_plan.subscription_type == SubscriptionPlanModel.freemium_plan.value:

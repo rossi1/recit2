@@ -134,7 +134,7 @@ class CreateInvoice(CreateAPIView):
         if client != 0:
             if request.user.subscription_plan.subscription_type == SubscriptionPlanModel.freemium_plan.value:
                 verify_user_status = self.verify_user_monthly_invoice()
-                if verify_user_status:
+                if verify_user_status['message']:
                     generate_link = self.generate_invoice_link(serializer.validated_data['invoice_id'], request.user.user_id)
                     self.perform_create(serializer, generate_link, client_id=client)
                     self.perform_invoice_delivery(generate_link, option, client=client, client_id=True)
@@ -151,7 +151,7 @@ class CreateInvoice(CreateAPIView):
                     self.perform_invoice_delivery(generate_link, option, client=client, client_id=True)
                 else:
                     verify_user_status = self.verify_user_monthly_invoice(invoice_one_time=False)
-                    if verify_user_status:
+                    if verify_user_status['message']:
                         generate_link = self.generate_invoice_link(serializer.validated_data['invoice_id'], request.user.user_id)
                         self.perform_create(serializer, generate_link, client_id=client)
                         self.perform_invoice_delivery(generate_link, option, client=client, client_id=True)
@@ -170,7 +170,7 @@ class CreateInvoice(CreateAPIView):
         else:
             if request.user.subscription_plan.subscription_type == SubscriptionPlanModel.freemium_plan.value:
                 verify_user_status = self.verify_user_monthly_invoice()
-                if verify_user_status:
+                if verify_user_status['message']:
                     generate_link = self.generate_invoice_link(serializer.validated_data['invoice_id'], request.user.user_id)
                     self.perform_create(serializer, generate_link, client_id=client)
                     self.perform_invoice_delivery(generate_link, option, serializer=serializer)
@@ -189,7 +189,7 @@ class CreateInvoice(CreateAPIView):
                     self.perform_invoice_delivery(generate_link, option, client=client, client_id=True)
                 else:
                     verify_user_status = self.verify_user_monthly_invoice(invoice_one_time=False)
-                    if verify_user_status:
+                    if verify_user_status['message']:
                         generate_link = self.generate_invoice_link(serializer.validated_data['invoice_id'], request.user.user_id)
                         self.perform_create(serializer, generate_link, client_id=client)
                         self.perform_invoice_delivery(generate_link, option, serializer=serializer)
@@ -203,12 +203,15 @@ class CreateInvoice(CreateAPIView):
                 
 
 
-    
         
-        return Response(data={
-            'data': serializer.data,
-            'url': generate_link
-        }, status=status.HTTP_201_CREATED)
+        try:
+            verify_user_status['invoice_count']
+        except KeyError:
+            invoice_count = None
+        else:
+            invoice_count  = verify_user_status['invoice_count']
+
+        return Response(data={'data': serializer.data, 'url': generate_link, 'invoice_count': invoice_count}, status=status.HTTP_201_CREATED)
 
 
     @staticmethod
@@ -291,7 +294,7 @@ class CreateInvoice(CreateAPIView):
         if invoice_count[0]['count'] == limit:
             
             return False
-        return True
+        return {'invoice_count': invoice_count[0]['count'], 'message': True}
 
         
         

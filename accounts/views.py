@@ -124,7 +124,11 @@ class LoginView(GenericAPIView):
     @staticmethod
     def get_card_info(customer_id):
         customer = stripe.Customer.retrieve(customer_id)
-        card = customer.sources.data[0]['last4']
+        if customer.sources.data[0] == []:
+            card = None
+        else:
+            card = customer.sources.data[0]['last4']
+        
         return card
 
 
@@ -225,5 +229,5 @@ def validate_business_name(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated,])
 def disabled_account(request):
-    get_user_model().objects.filter(email=request.user).update(is_active=False)
+    get_user_model().objects.filter(email=request.user.email).update(is_active=False)
     return Response({'status': 'sucesss', 'message': 'Account disabled'}, status=status.HTTP_200_OK)

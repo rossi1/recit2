@@ -71,6 +71,11 @@ class LoginView(GenericAPIView):
                 
                 return Response({'invalid credentials': 'invalid login credentials'}, status=status.HTTP_400_BAD_REQUEST)
 
+            elif not user.is_active:
+                return Response({'status': 'failed', 'message': 
+                'Account disabled'}, status=status.HTTP_400_BAD_REQUEST)
+
+
             else:
                 token = encode_user_payload(user)
 
@@ -215,3 +220,10 @@ def validate_business_name(request):
         return Response(data=True, status=status.HTTP_302_FOUND)
     else:
         return Response(data=False, status=status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated,])
+def disabled_account(request):
+    get_user_model().objects.filter(email=request.user).update(is_active=False)
+    return Response({'status': 'sucesss', 'message': 'Account disabled'}, status=status.HTTP_200_OK)

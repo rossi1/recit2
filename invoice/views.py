@@ -288,7 +288,7 @@ class CreateInvoice(CreateAPIView):
         print(invoice_count)
 
         if not invoice_count.exists():
-            return True
+            return {'invoice_count': None, 'message': True}
             
     
         if invoice_count[0]['count'] == limit:

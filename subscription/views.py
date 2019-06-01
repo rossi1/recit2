@@ -229,7 +229,7 @@ class UpdateCustomerCardToken(APIView):
              
             card = update_customer_card.sources.data[0]['last4']
                 
-            return Response({"status": "success", last_card_no: card}, status=status.HTTP_200_OK)
+            return Response({"status": "success", "last_card_no": card}, status=status.HTTP_200_OK)
 
         return Response(
             {"status": "error", "message": 

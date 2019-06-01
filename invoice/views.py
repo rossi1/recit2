@@ -118,7 +118,7 @@ def invoice_data_with__no_client(invoice, exclude=False):
 
 class CreateInvoice(CreateAPIView):
     permission_classes = (IsAuthenticated,)
-    #authentication_classes = (SessionAuthentication,)
+    authentication_classes = (SessionAuthentication,)
     queryset = Invoice
     serializer_class = InvoiceSerializer
 
@@ -293,7 +293,7 @@ class CreateInvoice(CreateAPIView):
     
         if invoice_count[0]['count'] == limit:
             
-            return False
+            return  {'invoice_count': invoice_count[0]['count'], 'message': False}
         return {'invoice_count': invoice_count[0]['count'], 'message': True}
 
         

@@ -224,10 +224,12 @@ class UpdateCustomerCardToken(APIView):
     def post(self, request, *args, **kwargs):
         request_body = request.data.get('tf_code',  None)
         if request_body is not None:
-            stripe.Customer.modify(request.user.subscription_plan.customer_id, source=request_body)
+            update_customer_card = stripe.Customer.modify(request.user.subscription_plan.customer_id, source=request_body)
+
+             
+            card =   update_customer_card['last4']   
                 
-                
-            return Response({"status": "success", "message":  "Card updated"}, status=status.HTTP_200_OK)
+            return Response({"status": "success", "message":  "Card updated", 'last_card_no': card}, status=status.HTTP_200_OK)
 
         return Response(
             {"status": "error", "message": 

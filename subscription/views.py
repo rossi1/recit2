@@ -229,7 +229,7 @@ class UpdateCustomerCardToken(APIView):
              
             print(update_customer_card)
                 
-            return Response({"status": "success", "message":  "Card updated", #'last_card_no': card}, status=status.HTTP_200_OK)
+            return Response({"status": "success"}, status=status.HTTP_200_OK)
 
         return Response(
             {"status": "error", "message": 

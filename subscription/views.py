@@ -227,9 +227,9 @@ class UpdateCustomerCardToken(APIView):
             update_customer_card = stripe.Customer.modify(request.user.subscription_plan.customer_id, source=request_body)
 
              
-            print(update_customer_card)
+            card = update_customer_card.sources.data[0]['last4']
                 
-            return Response({"status": "success"}, status=status.HTTP_200_OK)
+            return Response({"status": "success", last_card_no: card}, status=status.HTTP_200_OK)
 
         return Response(
             {"status": "error", "message": 

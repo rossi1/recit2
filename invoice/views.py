@@ -559,6 +559,33 @@ class DeleteInvoiceView(DeleteClientView):
     queryset = Invoice
     serializer_class = InvoiceSerializer
 
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        self.perform_destroy(instance)
+        if request.user.subscription_plan.subscription_type == SubscriptionPlanModel.freemium_plan.value:
+            invoice_count = self.get_invoice_count()
+        elif request.user.subscription_plan.subscription_type == SubscriptionPlanModel.freelance_plan.value:
+            invoice_count = self.get_invoice_count(invoice_one_time=False)
+
+        return Response({'invoice_count': invoice_count,}, status=status.HTTP_204_NO_CONTENT)
+
+
+    def get_invoice_count(self, invoice_one_time=True):
+        if invoice_one_time:
+            limit = settings.FREEMIUM_PLAN_LIMIT
+            invoice_type = getattr(settings, 'ONE_TIME')
+            invoice_count = Invoice.objects.filter(user=self.request.user, invoice_type=invoice_type,
+            created__range=[self.request.user.subscription_plan.subscription_start_date, self.request.user.subscription_plan.subscription_end_date]).exclude(
+                is_pending=False).values('created').annotate(count=Count('pk'))
+        else:
+            limit = settings.FREELANCE_PLAN_LIMIT
+            invoice_one_time = getattr(settings, 'ONE_TIME')
+            invoice_type = [getattr(settings, 'RECURRING_WEEKLY'), getattr(settings, 'RECURRING_MONTHLY'), getattr(settings, 'RECURRING_DAILY')]
+            invoice_count = Invoice.objects.filter(user=self.request.user, invoice_type__in=invoice_type,
+            created__range=[self.request.user.subscription_plan.subscription_start_date, 
+            self.request.user.subscription_plan.subscription_end_date]).exclude(
+                is_pending=False).values('created').annotate(count=Count('pk'))
+
 
 
 @api_view(['GET'])

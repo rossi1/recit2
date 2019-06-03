@@ -133,16 +133,11 @@ class CreateInvoice(CreateAPIView):
 
         if client != 0:
             if request.user.subscription_plan.subscription_type == SubscriptionPlanModel.freemium_plan.value:
-                verify_user_status = self.verify_user_monthly_invoice()
-                if verify_user_status['message']:
+                
                     generate_link = self.generate_invoice_link(serializer.validated_data['invoice_id'], request.user.user_id)
                     self.perform_create(serializer, generate_link, client_id=client)
                     self.perform_invoice_delivery(generate_link, option, client=client, client_id=True)
-
-                else:
-                    return Response(data={
-                    'status': 'failed', 'message': 'Exeeceded monthly limit'}, status=status.HTTP_400_BAD_REQUEST)
-
+                    verify_user_status = self.verify_user_monthly_invoice()
                 
             elif request.user.subscription_plan.subscription_type == SubscriptionPlanModel.freelance_plan.value:
                 if serializer.validated_data['invoice_type'].lower() == settings.ONE_TIME:
@@ -150,36 +145,22 @@ class CreateInvoice(CreateAPIView):
                     self.perform_create(serializer, generate_link, client_id=client)
                     self.perform_invoice_delivery(generate_link, option, client=client, client_id=True)
                 else:
+                    generate_link = self.generate_invoice_link(serializer.validated_data['invoice_id'], request.user.user_id)
+                    self.perform_create(serializer, generate_link, client_id=client)
+                    self.perform_invoice_delivery(generate_link, option, client=client, client_id=True)
                     verify_user_status = self.verify_user_monthly_invoice(invoice_one_time=False)
-                    if verify_user_status['message']:
-                        generate_link = self.generate_invoice_link(serializer.validated_data['invoice_id'], request.user.user_id)
-                        self.perform_create(serializer, generate_link, client_id=client)
-                        self.perform_invoice_delivery(generate_link, option, client=client, client_id=True)
-                    
-                    else:
-                        return Response(data={'status': 'failed', 'message': 'Exeeceded monthly limit'}, status=status.HTTP_400_BAD_REQUEST)
 
             else:
                 generate_link = self.generate_invoice_link(serializer.validated_data['invoice_id'], request.user.user_id)
                 self.perform_create(serializer, generate_link, client_id=client)
                 self.perform_invoice_delivery(generate_link, option, client=client, client_id=True)
-                
-
-
                         
         else:
             if request.user.subscription_plan.subscription_type == SubscriptionPlanModel.freemium_plan.value:
-                verify_user_status = self.verify_user_monthly_invoice()
-                if verify_user_status['message']:
                     generate_link = self.generate_invoice_link(serializer.validated_data['invoice_id'], request.user.user_id)
                     self.perform_create(serializer, generate_link, client_id=client)
                     self.perform_invoice_delivery(generate_link, option, serializer=serializer)
-        
-
-                   
-                else:
-                    return Response(data={
-                    'status': 'failed', 'message': 'Exeeceded monthly limit'}, status=status.HTTP_400_BAD_REQUEST)
+                    verify_user_status = self.verify_user_monthly_invoice()
 
                 
             elif request.user.subscription_plan.subscription_type == SubscriptionPlanModel.freelance_plan.value:
@@ -188,13 +169,12 @@ class CreateInvoice(CreateAPIView):
                     self.perform_create(serializer, generate_link, client_id=client)
                     self.perform_invoice_delivery(generate_link, option, client=client, client_id=True)
                 else:
-                    verify_user_status = self.verify_user_monthly_invoice(invoice_one_time=False)
-                    if verify_user_status['message']:
+                    
+                    
                         generate_link = self.generate_invoice_link(serializer.validated_data['invoice_id'], request.user.user_id)
                         self.perform_create(serializer, generate_link, client_id=client)
                         self.perform_invoice_delivery(generate_link, option, serializer=serializer)
-                    else:
-                        return Response(data={'status': 'failed', 'message': 'Exeeceded monthly limit'}, status=status.HTTP_400_BAD_REQUEST)
+                        verify_user_status = self.verify_user_monthly_invoice(invoice_one_time=False)
 
             else:
                 generate_link = self.generate_invoice_link(serializer.validated_data['invoice_id'], request.user.user_id)
@@ -204,14 +184,9 @@ class CreateInvoice(CreateAPIView):
 
 
         
-        try:
-            verify_user_status['invoice_count']
-        except KeyError:
-            invoice_count = None
-        else:
-            invoice_count  = verify_user_status['invoice_count']
+      
 
-        return Response(data={'data': serializer.data, 'url': generate_link, 'invoice_count': invoice_count}, status=status.HTTP_201_CREATED)
+        return Response(data={'data': serializer.data, 'url': generate_link, 'invoice_count': verify_user_status}, status=status.HTTP_201_CREATED)
 
 
     @staticmethod
@@ -286,15 +261,9 @@ class CreateInvoice(CreateAPIView):
 
         
         print(invoice_count)
-
-        if not invoice_count.exists():
-            return {'invoice_count': None, 'message': True}
             
-    
-        if invoice_count[0]['count'] == limit:
             
-            return  {'invoice_count': invoice_count[0]['count'], 'message': False}
-        return {'invoice_count': invoice_count[0]['count'], 'message': True}
+        return invoice_count[0]['count']
 
         
         
@@ -585,6 +554,8 @@ class DeleteInvoiceView(DeleteClientView):
             created__range=[self.request.user.subscription_plan.subscription_start_date, 
             self.request.user.subscription_plan.subscription_end_date]).exclude(
                 is_pending=False).values('created').annotate(count=Count('pk'))
+
+        return invoice_count[0]['count']
 
 
 

@@ -558,7 +558,7 @@ class DeleteInvoiceView(DeleteClientView):
         if not invoice_count.exists():
             count = 0
         else:
-            count invoice_count[0]['count']
+            count = invoice_count[0]['count']
 
 
         return count

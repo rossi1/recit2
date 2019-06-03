@@ -555,7 +555,13 @@ class DeleteInvoiceView(DeleteClientView):
             self.request.user.subscription_plan.subscription_end_date]).exclude(
                 is_pending=False).values('created').annotate(count=Count('pk'))
 
-        return invoice_count[0]['count']
+        if not invoice_count.exists():
+            count = 0
+        else:
+            count invoice_count[0]['count']
+
+
+        return count
 
 
 

@@ -118,7 +118,7 @@ def invoice_data_with__no_client(invoice, exclude=False):
 
 class CreateInvoice(CreateAPIView):
     permission_classes = (IsAuthenticated,)
-    authentication_classes = (SessionAuthentication,)
+    #authentication_classes = (SessionAuthentication,)
     queryset = Invoice
     serializer_class = InvoiceSerializer
 
@@ -263,9 +263,14 @@ class CreateInvoice(CreateAPIView):
 
         
         print(invoice_count)
+        if not invoice_count.exists():
+            count = 0
+        else:
+            count = invoice_count[0]['count']
+
             
             
-        return invoice_count[0]['count']
+        return count
 
         
         
@@ -537,6 +542,10 @@ class DeleteInvoiceView(DeleteClientView):
             invoice_count = self.get_invoice_count()
         elif request.user.subscription_plan.subscription_type == SubscriptionPlanModel.freelance_plan.value:
             invoice_count = self.get_invoice_count(invoice_one_time=False)
+        else:
+             invoice_count = 0
+
+
 
         return Response({'invoice_count': invoice_count,}, status=status.HTTP_204_NO_CONTENT)
 

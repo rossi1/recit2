@@ -154,7 +154,7 @@ class CreateInvoice(CreateAPIView):
                 generate_link = self.generate_invoice_link(serializer.validated_data['invoice_id'], request.user.user_id)
                 self.perform_create(serializer, generate_link, client_id=client)
                 self.perform_invoice_delivery(generate_link, option, client=client, client_id=True)
-                        
+                verify_user_status = 0
         else:
             if request.user.subscription_plan.subscription_type == SubscriptionPlanModel.freemium_plan.value:
                     generate_link = self.generate_invoice_link(serializer.validated_data['invoice_id'], request.user.user_id)
@@ -180,6 +180,8 @@ class CreateInvoice(CreateAPIView):
                 generate_link = self.generate_invoice_link(serializer.validated_data['invoice_id'], request.user.user_id)
                 self.perform_create(serializer, generate_link, client_id=client)
                 self.perform_invoice_delivery(generate_link, option, serializer=serializer)
+
+                verify_user_status = 0
                 
 
 
@@ -558,7 +560,7 @@ class DeleteInvoiceView(DeleteClientView):
         if not invoice_count.exists():
             count = 0
         else:
-            count invoice_count[0]['count']
+            count = invoice_count[0]['count']
 
 
         return count

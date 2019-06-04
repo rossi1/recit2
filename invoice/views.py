@@ -261,9 +261,14 @@ class CreateInvoice(CreateAPIView):
 
         
         print(invoice_count)
+        if not invoice_count.exists():
+            count = 0
+        else:
+            count = invoice_count[0]['count']
+
             
             
-        return invoice_count[0]['count']
+        return count
 
         
         

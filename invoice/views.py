@@ -535,6 +535,10 @@ class DeleteInvoiceView(DeleteClientView):
             invoice_count = self.get_invoice_count()
         elif request.user.subscription_plan.subscription_type == SubscriptionPlanModel.freelance_plan.value:
             invoice_count = self.get_invoice_count(invoice_one_time=False)
+        else:
+             invoice_count = 0
+
+
 
         return Response({'invoice_count': invoice_count,}, status=status.HTTP_204_NO_CONTENT)
 

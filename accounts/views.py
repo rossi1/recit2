@@ -194,8 +194,7 @@ def reset_password(request):
 
    
 class UpdateBusinessAccount(RetrieveUpdateAPIView):
-    from rest_framework.authentication import SessionAuthentication
-    authentication_classes = (SessionAuthentication,)
+    
     permission_classes = (IsAuthenticated,)
     serializer_class =  BusinessSerializer
     queryset = BusinessInfo

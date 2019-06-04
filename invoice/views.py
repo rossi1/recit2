@@ -543,7 +543,7 @@ class DeleteInvoiceView(DeleteClientView):
         elif request.user.subscription_plan.subscription_type == SubscriptionPlanModel.freelance_plan.value:
             invoice_count = self.get_invoice_count(invoice_one_time=False)
         else:
-             invoice_count = 0
+            invoice_count = 0
 
 
 

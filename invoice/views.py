@@ -651,13 +651,16 @@ class TransactionMixin():
             return transaction_data
 
     def get_invoice_data(self, invoice_id):
-        invoice_id = Invoice.objects.filter(invoice_id=invoice_id)
-        if invoice_id.exists():
-            invoice = {'amount': invoice_id.project_amount, 'currency':  invoice_id.currency, 'description': 'Payment being made for {}'.format(invoice_id.invoice_id),
-            'invoice_type': invoice_id.invoice_type}
-            return invoice
-        else:
+        
+        try:
+            invoice__id = Invoice.objects.filter(invoice_id=invoice_id)
+        except Invoice.DoesNotExist:
             return False
+        else:
+            invoice = {'amount': invoice__id.project_amount, 'currency':  invoice__id.currency.split('-')[1], 'description': 'Payment being made for {}'.format(invoice__id.invoice_id),
+            'invoice_type': invoice__id.invoice_type}
+            return invoice
+
 
     def create_plan(self, amount, interval, plan_name, currency):
         create_plan = stripe.Plan.create(
@@ -688,6 +691,9 @@ class TransactionMixin():
 
 
 class PerformTransaction(TransactionMixin, APIView):
+    authentication_classes = ()
+    permission_classes = (AllowAny,)
+
     
     def post(self, request, *args, **kwargs):
         invoice_id = request.data.get('invoice_id', None)
@@ -711,8 +717,9 @@ class PerformTransaction(TransactionMixin, APIView):
             else:
                 amount = invoice['amount'] 
                 invoice_type = invoice['invoice_type'] 
+                currency = invoice['currency']
                 plan_name = "plan for invoice {}".format(invoice_id)
-                create_plan_invoice = self.create_plan(amount, invoice_type, plan_name)
+                create_plan_invoice = self.create_plan(amount, invoice_type, plan_name, currency)
                 create_customer = self.create_customer(card_token, invoice_id)
                 self.create_subscription(create_customer.id, create_plan_invoice.id)
                 self.update_record(invoice_id)

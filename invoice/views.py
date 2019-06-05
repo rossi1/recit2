@@ -704,7 +704,8 @@ class PerformTransaction(TransactionMixin, APIView):
         if invoice_id is not None and card_token is not None:
             invoice= self.get_invoice_data(invoice_id)
             if not invoice:
-                if invoice['invoice_type'].lower() == settings.ONE_TIME:
+
+                if print(invoice['invoice_type'].lower()) == settings.ONE_TIME:
                     create_charge = self.perform_charge(card_token, 
                     invoice['amount'], invoice['currency'], invoice['description'])
                     

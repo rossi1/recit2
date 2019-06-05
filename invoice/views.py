@@ -719,7 +719,7 @@ class PerformTransaction(TransactionMixin, APIView):
             else:
                 amount = invoice['amount'] 
                 invoice_type = invoice['invoice_type'] 
-                currency = invoice['currency']
+                currency = invoice['currency'].lower()
                 plan_name = "plan for invoice {}".format(invoice_id)
                 create_plan_invoice = self.create_plan(amount, invoice_type, plan_name, currency)
                 create_customer = self.create_customer(card_token, invoice_id)

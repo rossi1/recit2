@@ -653,7 +653,7 @@ class TransactionMixin():
     def get_invoice_data(self, invoice_id):
         
         try:
-            invoice__id = Invoice.objects.filter(invoice_id=invoice_id)
+            invoice__id = Invoice.objects.get(invoice_id=invoice_id)
         except Invoice.DoesNotExist:
             return False
         else:

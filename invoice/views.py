@@ -689,6 +689,7 @@ class TransactionMixin():
 
 class PerformTransaction(TransactionMixin, APIView):
     permission_classes = (AllowAny,)
+    authentication_classes = ()
     
     def post(self, request, *args, **kwargs):
         invoice_id = request.data.get('invoice_id', None)

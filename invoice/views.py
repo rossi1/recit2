@@ -13,6 +13,7 @@ from django.conf import settings
 
 
 from twilio.rest import Client
+import stripe
 
 
 from django.db.models import Count
@@ -23,6 +24,7 @@ from rest_framework.decorators import permission_classes, authentication_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.authentication import SessionAuthentication
 from rest_framework import status
+from rest_framework.views import APIView
 from rest_framework.settings import api_settings
 from rest_framework.validators import ValidationError
 from rest_framework.generics import CreateAPIView, RetrieveUpdateAPIView, DestroyAPIView, ListAPIView, RetrieveAPIView, get_object_or_404
@@ -36,6 +38,7 @@ from .serializer import InvoiceSerializer, ClientSerializer, AutomatedReminderSe
 from .tasks import send_sms, _send_email
 
 from subscription.views import SubscriptionPlanModel
+from transaction.models import TransactionHistory
 
 
 class Medium(Enum):
@@ -627,6 +630,99 @@ def view_invoice_for_payment(request, invoice_id):
     return Response(data)
 
 
+class TransactionMixin():
 
 
 
+    def perform_charge(self, card_token, amount, currency, description):
+        try:
+            create_charge = stripe.Charge.create(
+                amount=amount,
+                currency=str(currency),
+                source=str(card_token), # obtained with Stripe.js
+                description=description
+                
+            )
+        except stripe.error.CardError as e:
+            return False
+
+        else:
+            transaction_data = {}
+            return transaction_data
+
+    def get_invoice_data(self, invoice_id):
+        invoice_id = Invoice.objects.filter(invoice_id=invoice_id)
+        if invoice_id.exists():
+            invoice = {'amount': invoice_id.project_amount, 'currency':  invoice_id.currency, 'description': 'Payment being made for {}'.format(invoice_id.invoice_id),
+            'invoice_type': invoice_id.invoice_type}
+            return invoice
+        else:
+            return False
+
+    def create_plan(self, amount, interval, plan_name, currency):
+        create_plan = stripe.Plan.create(
+            amount=amount,
+            interval=interval,
+            product={"name": plan_name},
+            currency=str(currency)
+            )
+        return create_plan
+
+    def create_subscription(self, customer_id, plan_id):
+        create_sub = stripe.Subscription.create(
+            customer="cus_FCBG6dfW6SjIq6",items=[
+                {
+                    "plan": plan_id,
+                    },
+                    ]
+            )
+
+        return create_sub
+
+    def create_customer(self, card_token, invoice_id):
+        create_customer = stripe.Customer.create(
+            description="Customer for invoice_id {}".format(invoice_id),
+            source=card_token)
+
+        return create_customer
+
+
+class PerformTransaction(TransactionMixin, APIView):
+    
+    def post(self, request, *args, **kwargs):
+        invoice_id = request.data.get('invoice_id', None)
+        
+        card_token = request.data.get('card_token', None)
+
+        if invoice_id is not None and card_token is not None:
+            invoice= self.get_invoice_data(invoice_id)
+            if not invoice:
+                if invoice['invoice_type'] == settings.ONE_TIME:
+                    create_charge = self.perform_charge(card_token, 
+                    invoice['amount'], invoice['currency'], invoice['description'])
+                    
+                    if not create_charge:
+                        self.update_record(invoice_id)
+                        Response({'status': 'sucess', 'message': 'Transaction was succesful'}, status=status.HTTP_200_OK)
+                    else:
+                        Response({'status': 'failed', 'message': 'An error occured while performing transaction'}, status=status.HTTP_400_BAD_REQUEST)
+                else:
+                    Response({'status': 'failed', 'message': 'Invoice is Invalid'}, status=status.HTTP_400_BAD_REQUEST)
+            else:
+                amount = invoice['amount'] 
+                invoice_type = invoice['invoice_type'] 
+                plan_name = "plan for invoice {}".format(invoice_id)
+                create_plan_invoice = self.create_plan(amount, invoice_type, plan_name)
+                create_customer = self.create_customer(card_token, invoice_id)
+                self.create_subscription(create_customer.id, create_plan_invoice.id)
+                self.update_record(invoice_id)
+                Response({'status': 'sucess', 'message': 'Transaction was succesful'}, status=status.HTTP_200_OK)
+        else:
+            return Response({'status': 'failed', 'message': 'Missing Parameters'}, status=status.HTTP_400_BAD_REQUEST)
+
+    @staticmethod
+    def update_record(invoice_id):
+        invoice = Invoice.objects.filter(invoice_id=invoice_id)
+        TransactionHistory.objects.create(user_id=invoice.user, 
+        transact_amount=invoice.project_amount, description="payment made for invoice id {}".format(invoice.invoice_id))
+        return invoice.update(is_pending=False)

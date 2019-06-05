@@ -20,5 +20,6 @@ urlpatterns = [
     path('create-reminder/', views.CreateAutomatedReminder.as_view(), name='create_reminder'),
     path('cancel-reminder/<str:invoice_id>/', views.cancel_reminder, name='cancel_remider'),
     path('approve-invoice/str:invoice_id>/', views.approve_invoice, name='approve'),
-    path('view-data/<str:invoice_id>/', views.view_invoice_for_payment, name='view_data')
+    path('view-data/<str:invoice_id>/', views.view_invoice_for_payment, name='view_data'),
+    path('perform_invoice_transaction/', views.PerformTransaction.as_view(), name='invoice_transaction')
 ]

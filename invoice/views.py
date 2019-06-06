@@ -721,11 +721,11 @@ class PerformTransaction(TransactionMixin, APIView):
                 invoice_type = invoice['invoice_type'] 
                 currency = invoice['currency'].lower()
                 plan_name = "plan for invoice {}".format(invoice_id)
-                create_plan_invoice = self.create_plan(amount, invoice_type, plan_name, currency)
+                create_plan_invoice = self.create_plan(amount, invoice_type, plan_name, currency.lower())
                 create_customer = self.create_customer(card_token, invoice_id)
                 self.create_subscription(create_customer.id, create_plan_invoice.id)
                 self.update_record(invoice_id)
-                Response({'status': 'sucess', 'message': 'Transaction was succesful'}, status=status.HTTP_200_OK)
+                Response({'status': 'http://recit.herokuapp.com/c/view-invoice/120981957/?user_id=453672', 'message': 'Transaction was succesful'}, status=status.HTTP_200_OK)
         else:
             return Response({'status': 'failed', 'message': 'Missing Parameters'}, status=status.HTTP_400_BAD_REQUEST)
 

@@ -741,4 +741,6 @@ class PerformTransaction(TransactionMixin, APIView):
         invoice = Invoice.objects.get(invoice_id=invoice_id)
         TransactionHistory.objects.create(user_id=invoice.user, invoice_id=invoice.invoice_id,
         transact_amount=invoice.project_amount, description="payment made for invoice id {}".format(invoice.invoice_id))
-        return invoice.update(is_pending=False)
+        invoice.is_pending = False 
+        return invoice.save()
+        #return invoice.update(is_pending=False)

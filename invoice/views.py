@@ -670,7 +670,7 @@ class TransactionMixin():
 
     def create_plan(self, amount, interval, plan_name, currency):
         create_plan = stripe.Plan.create(
-            amount=amount,
+            amount=2565,
             interval=interval,
             product={"name": plan_name},
             currency='ngn'

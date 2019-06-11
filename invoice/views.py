@@ -673,7 +673,7 @@ class TransactionMixin():
             amount=amount,
             interval=interval,
             product={"name": plan_name},
-            currency=str(currency)
+            currency=currency
             )
         return create_plan
 

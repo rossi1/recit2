@@ -659,9 +659,10 @@ class TransactionMixin():
         else:
             print('--------')
             cc = invoice__id.currency
+            print('cur ia'+ cc)
             print('------####--')
             cur = invoice__id.currency.split('-')[1]
-            print(cur)
+            print('curry'+ cur)
             invoice = {'amount': invoice__id.project_amount, 'currency':  invoice__id.currency.split('-')[1], 'description': 'Payment being made for {}'.format(invoice__id.invoice_id),
             'invoice_type': invoice__id.invoice_type}
             return invoice

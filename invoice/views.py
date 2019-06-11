@@ -679,7 +679,7 @@ class TransactionMixin():
 
     def create_subscription(self, customer_id, plan_id):
         create_sub = stripe.Subscription.create(
-            customer="cus_FCBG6dfW6SjIq6",items=[
+            customer=customer_id, items=[
                 {
                     "plan": plan_id,
                     },

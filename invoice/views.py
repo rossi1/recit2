@@ -660,7 +660,7 @@ class TransactionMixin():
             print('--------')
             cc = invoice__id.currency
             print('------####--')
-            cur = invoice__id.currency.split('-')[1].currency.split('-')[1]
+            cur = invoice__id.currency.split('-')[1]
             print(cur)
             invoice = {'amount': invoice__id.project_amount, 'currency':  invoice__id.currency.split('-')[1], 'description': 'Payment being made for {}'.format(invoice__id.invoice_id),
             'invoice_type': invoice__id.invoice_type}

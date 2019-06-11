@@ -10,4 +10,4 @@ class TransactionClientSerializer(serializers.ModelSerializer):
 class TransactionUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = TransactionHistory
-        exclude = ('client_id',)
+        exclude = ('user_id',)

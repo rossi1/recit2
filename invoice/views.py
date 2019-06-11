@@ -726,8 +726,9 @@ class PerformTransaction(TransactionMixin, APIView):
                 amount = invoice['amount'] 
                 invoice_type = invoice['invoice_type'] 
                 currency = invoice['currency'].lower()
+                print('cur is not ' + currency)
                 plan_name = "plan for invoice {}".format(invoice_id)
-                create_plan_invoice = self.create_plan(amount, invoice_type, plan_name, print(currency))
+                create_plan_invoice = self.create_plan(amount, invoice_type, plan_name, currency)
                 create_customer = self.create_customer(card_token, invoice_id)
                 self.create_subscription(create_customer.id, create_plan_invoice.id)
                 self.update_record(invoice_id)

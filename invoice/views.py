@@ -738,7 +738,7 @@ class PerformTransaction(TransactionMixin, APIView):
 
     @staticmethod
     def update_record(invoice_id):
-        invoice = Invoice.objects.filter(invoice_id=invoice_id)
+        invoice = Invoice.objects.get(invoice_id=invoice_id)
         TransactionHistory.objects.create(user_id=invoice.user, 
         transact_amount=invoice.project_amount, description="payment made for invoice id {}".format(invoice.invoice_id))
         return invoice.update(is_pending=False)

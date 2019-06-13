@@ -327,18 +327,12 @@ class ViewPaidInvoice(ViewPendingInvoice):
         if invoices.exists():
             for invoice in invoices:
                 try:
-                    data = invoice_data(invoice)
-                except:
-                    data['client_email'] = invoice.client_email
-                    data['client_name'] = invoice.client_name
-                    data['client_phone_number'] = invoice.client_phone_number
-                    data['client_address'] = invoice.client_address
+                    data = invoice_data_with_client(invoice)
+                except AttributeError:
+                    data = invoice_data_with__no_client(invoice)
+                   
 
-                    list_data.append(data)
-
-                else:
-                    list_data.append(data)
-        
+                list_data.append(data)
 
         return list_data
 

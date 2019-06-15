@@ -752,7 +752,7 @@ class ChargeBackView(GenericAPIView):
         charge_back_serializer = self.get_serializer(data=request.data)
         charge_back_serializer.is_valid(raise_exception=True)
         subject = "charge back for invoice id {}".format(charge_back_serializer.validated_data['invoice_id'])
-        message = "{} {} {}".format(charge_back_serializer.validated_data['message'], charge_back_serializer.validated_data['contact'], charge_back_serializer.validated_data['contact_email'])
+        message = "{} {} {}".format(charge_back_serializer.validated_data['message'], charge_back_serializer.validated_data['contact_name'], charge_back_serializer.validated_data['contact_email'])
         attach = charge_back_serializer.validated_data['dynamic_content']
         charge_back_mail(subject, message, attach)
 

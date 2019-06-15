@@ -23,10 +23,16 @@ from .models import SubscriptionPlan
 def _send_email(subject, message_body, email):
     return send_mail(subject, message_body, settings.EMAIL_HOST_USER, [email], fail_silently=False)
 
-def extend_subscription_date():
-    today_date = date.today()
-    sub_expiry_date = today_date + relativedelta(months=+1)
-    return sub_expiry_date
+def cancel_restriction():
+    subscription = SubscriptionPlan.objects.all()
+    for subs in subscription:
+        if not subs.can_switch:
+            today = datetime.now()
+            today_unixtimestamp = datetime.timestamp(today)
+            timestamp = subs.sub_switch_date
+            if today_unixtimestamp == timestamp:
+                subs.can_switch = True
+                return subs.save()
 
 
 """
@@ -44,15 +50,14 @@ def update_freemium_plan_end_date():
 
 
 
-"""      
+     
 @periodic_task(
     run_every=(crontab(hour=9, minute=30)),
     name='task_send_automated_reminder',
     ignore_result=True
 )
 def subscriptions_plans():
-    update_freemium_plan_end_date()
-"""
+    cancel_restriction()
                     
 
 

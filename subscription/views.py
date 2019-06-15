@@ -1,6 +1,5 @@
 from enum import Enum
-from datetime import date
-import datetime
+from datetime import date, datetime
 
 from dateutil.relativedelta import *
 import stripe
@@ -132,7 +131,7 @@ def cancel_subscription_plan(request):
    subscription_type = SubscriptionPlanModel.freemium_plan.value
    SubscriptionPlan.objects.filter(plan_id=request.user).update(subscription_type=subscription_type,
    subscription_start_date=sub_start_date, 
-   subscription_end_date=sub_end_date,
+   subscription_end_date=sub_end_date, 
    subscription_id='')
    return Response(data={'status': 'success'}, status=status.HTTP_200_OK)
 
@@ -145,7 +144,9 @@ class SwitchSubscriptionPlan(APIView):
         #
         get_plan = request.query_params.get('sub_plan',  None)
 
-        if get_plan is not None:
+        
+        if request.user.subscription_plan.can_switch:
+            now = datetime.now()
         
             if get_plan == SubscriptionPlanModel.freelance_plan.value:
                 """
@@ -165,9 +166,10 @@ class SwitchSubscriptionPlan(APIView):
                 else:
                     sub_start_date = datetime.datetime.utcfromtimestamp(subscribe_plan.current_period_start)
                     sub_end_date = datetime.datetime.utcfromtimestamp(subscribe_plan.current_period_end)
+                    sub_switch_date = datetime.timestamp(now)
                     SubscriptionPlan.objects.filter(plan_id=request.user).update(subscription_type=subscription_type,
-                    subscription_start_date=sub_start_date.date(), 
-                    subscription_end_date=sub_end_date.date(), subscription_id=subscribe_plan.id)
+                    subscription_start_date=sub_start_date.date(), sub_switch_date=sub_switch_date,
+                    subscription_end_date=sub_end_date.date(), subscription_id=subscribe_plan.id, can_switch=False)
                     return Response(data={'status': 'success'}, status=status.HTTP_200_OK)
 
             elif get_plan == SubscriptionPlanModel.business_plan.value:
@@ -189,8 +191,9 @@ class SwitchSubscriptionPlan(APIView):
                 else:
                     sub_start_date = datetime.datetime.utcfromtimestamp(subscribe_plan.current_period_start)
                     sub_end_date = datetime.datetime.utcfromtimestamp(subscribe_plan.current_period_end)
+                    sub_switch_date = datetime.timestamp(now)
                     SubscriptionPlan.objects.filter(plan_id=request.user).update(subscription_type=subscription_type,
-                    subscription_start_date=sub_start_date.date(), 
+                    subscription_start_date=sub_start_date.date(), can_switch=False, sub_switch_date=sub_switch_date,
                     subscription_end_date=sub_end_date.date(), subscription_id=subscribe_plan.id)
                     return Response(data={'status': 'success'}, status=status.HTTP_200_OK)
             else:
@@ -212,14 +215,18 @@ class SwitchSubscriptionPlan(APIView):
                 else:
                     sub_start_date = datetime.datetime.utcfromtimestamp(subscribe_plan.current_period_start)
                     sub_end_date = datetime.datetime.utcfromtimestamp(subscribe_plan.current_period_end)
+                    sub_switch_date = datetime.timestamp(now)
                     SubscriptionPlan.objects.filter(plan_id=request.user).update(subscription_type=subscription_type,
-                    subscription_start_date=sub_start_date.date(), subscription_end_date=sub_end_date.date(),
-                    subscription_id=subscribe_plan.id)
+                    subscription_start_date=sub_start_date.date(), subscription_end_date=sub_end_date.date(), sub_switch_date=sub_switch_date,
+                    subscription_id=subscribe_plan.id,  can_switch=False)
                     return Response(data={'status': 'success'}, status=status.HTTP_200_OK)
+                    
+            return Response(data={'status': 'failed', 'message': 'unable to switch plans at the moment'}, status=status.HTTP_400_BAD_REQUEST)
+
 
 
 class UpdateCustomerCardToken(APIView):
-    PermissionError = (IsAuthenticated,)
+    permission_classes = (IsAuthenticated,)
 
     def post(self, request, *args, **kwargs):
         request_body = request.data.get('tf_code',  None)

@@ -11,3 +11,6 @@ class TransactionUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = TransactionHistory
         exclude = ('user_id',)
+
+
+        

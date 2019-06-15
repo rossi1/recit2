@@ -205,6 +205,11 @@ DATA_UPLOAD_MAX_NUMBER_FIELDS = 10240
 ACCOUNT_SID = 'ACe16929531bae78596e50b0185a877442'
 AUTH_TOKEN = '31fcedd10b248ef38f383c3cd98f7852'
 
+EMAIL_ADMINS = [
+    'emmanuelukwuegbu2016@gmail.com',
+    'creative.joe007@gmail.com'
+]
+
 
 ONE_TIME  = 'one-time'
 RECURRING_BILLING = 'recurring-billing'

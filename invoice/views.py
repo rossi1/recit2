@@ -27,18 +27,20 @@ from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.settings import api_settings
 from rest_framework.validators import ValidationError
-from rest_framework.generics import CreateAPIView, RetrieveUpdateAPIView, DestroyAPIView, ListAPIView, RetrieveAPIView, get_object_or_404
+from rest_framework.generics import CreateAPIView, RetrieveUpdateAPIView, DestroyAPIView, ListAPIView, RetrieveAPIView, get_object_or_404, GenericAPIView
 
 from cashtarg._celery import app
 from accounts.authentication import JwtAuthentication
 
 
 from .models import Invoice,  ClientInfo, AutomatedReminder
-from .serializer import InvoiceSerializer, ClientSerializer, AutomatedReminderSerializer
+from .serializer import InvoiceSerializer, ClientSerializer, AutomatedReminderSerializer, ChargeBackSerializer
 from .tasks import send_sms, _send_email
+from .utils import charge_back_mail
 
 from subscription.views import SubscriptionPlanModel
 from transaction.models import TransactionHistory
+
 
 
 class Medium(Enum):
@@ -739,3 +741,19 @@ class PerformTransaction(TransactionMixin, APIView):
         invoice.is_pending = False 
         return invoice.save()
         #return invoice.update(is_pending=False)
+
+
+class ChargeBackView(GenericAPIView):
+    permission_classes = (AllowAny, )
+
+    serializer_class= ChargeBackSerializer
+
+    def post(self, request, *args, **kwargs):
+        charge_back_serializer = self.get_serializer(data=request.data)
+        charge_back_serializer.is_valid(raise_exception=True)
+        subject = "charge back for invoice id {}".format(charge_back_serializer.validated_data['invoice_id'])
+        message = "{} {} {}".format(charge_back_serializer.validated_data['message'], charge_back_serializer.validated_data['contact'], charge_back_serializer.validated_data['contact_email'])
+        attach = charge_back_serializer.validated_data['dynamic_content']
+        charge_back_mail(subject, message, attach)
+
+        return Response({'status': 'sucesss', 'message': 'delivered'}, status=status.HTTP_200_OK)

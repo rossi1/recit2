@@ -22,7 +22,7 @@ from rest_framework.views import APIView
 
 
 from .models  import SubscriptionPlan
-from .utils import subscribe_stripe_plan, extend_subscription_date
+from .utils import subscribe_stripe_plan, disabled_sub_switch
 from .tasks import _send_email
 
 
@@ -146,7 +146,7 @@ class SwitchSubscriptionPlan(APIView):
 
         
         if request.user.subscription_plan.can_switch:
-            now = datetime.now()
+            
         
             if get_plan == SubscriptionPlanModel.freelance_plan.value:
                 """
@@ -166,7 +166,7 @@ class SwitchSubscriptionPlan(APIView):
                 else:
                     sub_start_date = datetime.datetime.utcfromtimestamp(subscribe_plan.current_period_start)
                     sub_end_date = datetime.datetime.utcfromtimestamp(subscribe_plan.current_period_end)
-                    sub_switch_date = datetime.timestamp(now)
+                    sub_switch_date =  disabled_sub_switch()
                     SubscriptionPlan.objects.filter(plan_id=request.user).update(subscription_type=subscription_type,
                     subscription_start_date=sub_start_date.date(), sub_switch_date=sub_switch_date,
                     subscription_end_date=sub_end_date.date(), subscription_id=subscribe_plan.id, can_switch=False)
@@ -191,7 +191,7 @@ class SwitchSubscriptionPlan(APIView):
                 else:
                     sub_start_date = datetime.datetime.utcfromtimestamp(subscribe_plan.current_period_start)
                     sub_end_date = datetime.datetime.utcfromtimestamp(subscribe_plan.current_period_end)
-                    sub_switch_date = datetime.timestamp(now)
+                    sub_switch_date =  disabled_sub_switch()
                     SubscriptionPlan.objects.filter(plan_id=request.user).update(subscription_type=subscription_type,
                     subscription_start_date=sub_start_date.date(), can_switch=False, sub_switch_date=sub_switch_date,
                     subscription_end_date=sub_end_date.date(), subscription_id=subscribe_plan.id)
@@ -215,7 +215,7 @@ class SwitchSubscriptionPlan(APIView):
                 else:
                     sub_start_date = datetime.datetime.utcfromtimestamp(subscribe_plan.current_period_start)
                     sub_end_date = datetime.datetime.utcfromtimestamp(subscribe_plan.current_period_end)
-                    sub_switch_date = datetime.timestamp(now)
+                    sub_switch_date =  disabled_sub_switch()
                     SubscriptionPlan.objects.filter(plan_id=request.user).update(subscription_type=subscription_type,
                     subscription_start_date=sub_start_date.date(), subscription_end_date=sub_end_date.date(), sub_switch_date=sub_switch_date,
                     subscription_id=subscribe_plan.id,  can_switch=False)

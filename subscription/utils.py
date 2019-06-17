@@ -33,7 +33,7 @@ def upgrade_and_downgrade_stripe_plan(subscription_id, plan_id):
 
 
 
-def extend_subscription_date():
+def disabled_sub_switch():
     today_date = date.today()
-    sub_expiry_date = today_date + relativedelta(months=+1)
-    return sub_expiry_date
+    disable_sub_switch_date = today_date + relativedelta(days=+1)
+    return disable_sub_switch_date

@@ -5,6 +5,7 @@ from django.contrib.auth import get_user_model
 from django.conf import settings
 from django.core.serializers.json import DjangoJSONEncoder
 from accounts.serializer import generated_unique_id
+from django.core.validators import FileExtensionValidator
 
 
 from .models  import Invoice, ClientInfo, AutomatedReminder

@@ -23,3 +23,9 @@ class AddBankSerializer(serializers.ModelSerializer):
             save_data = BankDetails.objects.create(bank_id=user, **validated_data)
             return save_data
 
+
+class RequestFundSerializer(serializers.Serializer):
+    request_fund = serializers.DecimalField(decimal_places=2, max_digits=20)
+
+
+    

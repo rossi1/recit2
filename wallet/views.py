@@ -4,13 +4,14 @@ from rest_framework.response import Response
 from rest_framework.decorators import permission_classes, authentication_classes, api_view
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
-from rest_framework.generics import CreateAPIView, RetrieveUpdateAPIView, DestroyAPIView, RetrieveAPIView, get_object_or_404
+from rest_framework.views import APIView
+from rest_framework.generics import GenericAPIView, CreateAPIView, RetrieveUpdateAPIView, DestroyAPIView, RetrieveAPIView, get_object_or_404
 
 from accounts.authentication import JwtAuthentication
 from accounts.utils import encode_user_payload
 
 
-from .serializer import SecurePassword, AddBankSerializer
+from .serializer import SecurePassword, AddBankSerializer, RequestFundSerializer
 from .permission import SecureView
 from .models import  BankDetails
 
@@ -57,4 +58,17 @@ class UpdateBank(RetrieveUpdateAPIView):
     queryset = BankDetails
     serializer_class = AddBankSerializer
     lookup_url_kwarg = 'pk'
+
+
+
+class MakeWithdrawalView(GenericAPIView):
+    permission_classes = (IsAuthenticated, SecureView)
+    serializer_class = RequestFundSerializer
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        if serializer.validated_data['amount'] < request.user.wallet_balance.balance:
+            return Response({'status': 'Failed', 'message': "Insufficient Fund"}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({'status': 'Failed', 'message': "Transaction Successful"}, status=status.HTTP_200_OK)
 

@@ -253,3 +253,6 @@ cloudinary.config(
   api_secret = config('CLOUDINARY_SECRET_KEY')
 )
 """
+
+DEFAULT_CURRENCY= 'NGN'
+ACCESS_KEY = config('ACCESS_KEY')

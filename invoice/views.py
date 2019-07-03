@@ -1,4 +1,5 @@
 import json
+import requests
 from enum import Enum
 from collections import OrderedDict
 from datetime import datetime
@@ -10,6 +11,7 @@ from django.core.mail import send_mail
 from django.urls import reverse
 from django.core.serializers.json import DjangoJSONEncoder
 from django.conf import settings
+from django.db.models import F
 
 
 from twilio.rest import Client
@@ -40,7 +42,7 @@ from .utils import charge_back_mail
 
 from subscription.views import SubscriptionPlanModel
 from transaction.models import TransactionHistory
-
+from wallet.models import WalletBalance
 
 
 class Medium(Enum):
@@ -644,7 +646,7 @@ class TransactionMixin():
 
         else:
             transaction_data = {}
-            return transaction_data
+            return True
 
     def get_invoice_data(self, invoice_id):
         
@@ -653,23 +655,22 @@ class TransactionMixin():
         except Invoice.DoesNotExist:
             return False
         else:
-            print('--------')
-            cc = invoice__id.currency
-            print('cur ia'+ cc)
-            print('------####--')
-            cur = invoice__id.currency.split('-')[1]
-            print('curry'+ cur)
-            invoice = {'amount': invoice__id.project_amount, 'currency':  invoice__id.currency.split('-')[1], 'description': 'Payment being made for {}'.format(invoice__id.invoice_id),
-            'invoice_type': invoice__id.invoice_type}
+            
+            currency = invoice__id.currency.split('-')[1].upper()
+            amount  = int(invoice__id.project_amount)
+            invoice_type = invoice__id.invoice_type
+            
+            invoice = {'amount': int(amount), 'currency':  currency, 'description': 'Payment being made for {}'.format(invoice__id.invoice_id),
+            'invoice_type': invoice_type}
             return invoice
 
 
     def create_plan(self, amount, interval, plan_name, currency):
         create_plan = stripe.Plan.create(
-            amount=2565,
+            amount=amount,
             interval=interval,
             product={"name": plan_name},
-            currency='ngn'
+            currency=currency
             )
         return create_plan
 
@@ -691,6 +692,29 @@ class TransactionMixin():
 
         return create_customer
 
+    def convert_currency(self, currency, amount):
+       
+        url = 'https://apilayer.net/api/convert?access_key{}&from={}&to={}&amount={}'.format(settings.ACCESS_KEY, \
+        currency, settings.DEFAULT_CURRENCY, amount)
+
+        convert_currency = requests.get(url)
+        return convert_currency['result']
+
+    def charge_local_transaction(self, amount):
+        charge_transaction = (3 / 100) * amount
+        return int(charge_transaction)
+
+    def charge_international_transaction(self, amount):
+        charge_transaction = (5 / 100) * amount
+        return int(charge_transaction)
+
+    def calculate_charge(self, amount):
+        final_amount = settings.CHARGE - amount
+        return final_amount
+
+
+
+
 
 class PerformTransaction(TransactionMixin, APIView):
     authentication_classes = ()
@@ -705,31 +729,41 @@ class PerformTransaction(TransactionMixin, APIView):
 
         if invoice_id is not None and card_token is not None:
             invoice= self.get_invoice_data(invoice_id)
-            if not invoice:
-                invoice_type = str(invoice['invoice_type'].lower())
+            if invoice:
+                invoice_type = invoice['invoice_type'].lower()
 
                 if invoice_type == settings.ONE_TIME:
+                    amount = 0
+                    if invoice['currency'] == settings.DEFAULT_CURRENCY:
+                        amount = self.charge_local_transaction(invoice['amount'])
+                    else:
+                        amount = self.charge_international_transaction(invoice['amount'])
+
                     create_charge = self.perform_charge(card_token, 
-                    invoice['amount'], invoice['currency'], invoice['description'])
+                    amount, invoice['currency'], invoice['description'])
                     
-                    if not create_charge:
+                    if create_charge:
+                        convert_change = self.convert_currency(invoice['currency'], invoice['amount'])
+                        calculate_amount = self.calculate_charge(convert_change)
+                        self.update_user_wallet(invoice_id, calculate_amount)
                         self.update_record(invoice_id)
-                        Response({'status': 'sucess', 'message': 'Transaction was succesful'}, status=status.HTTP_200_OK)
+                        Response({'status': 'success', 'message': 'Transaction was succesful'}, status=status.HTTP_200_OK)
                     else:
                         Response({'status': 'failed', 'message': 'An error occured while performing transaction'}, status=status.HTTP_400_BAD_REQUEST)
                 else:
-                    Response({'status': 'failed', 'message': 'Invoice is Invalid'}, status=status.HTTP_400_BAD_REQUEST)
+                    amount = invoice['amount'] 
+                    invoice_type = invoice['invoice_type'] 
+                    currency = invoice['currency']
+            
+                    plan_name = "plan for invoice {}".format(invoice_id)
+                    create_plan_invoice = self.create_plan(amount, invoice_type, plan_name, currency)
+                    create_customer = self.create_customer(card_token, invoice_id)
+                    self.create_subscription(create_customer.id, create_plan_invoice.id)
+                    self.update_record(invoice_id)
+                    return Response({'status': 'success', 'message': 'Transaction was succesful'}, status=status.HTTP_200_OK)
             else:
-                amount = invoice['amount'] 
-                invoice_type = invoice['invoice_type'] 
-                currency = invoice['currency'].lower()
-                print('cur is not ' + currency)
-                plan_name = "plan for invoice {}".format(invoice_id)
-                create_plan_invoice = self.create_plan(amount, invoice_type, plan_name, currency)
-                create_customer = self.create_customer(card_token, invoice_id)
-                self.create_subscription(create_customer.id, create_plan_invoice.id)
-                self.update_record(invoice_id)
-                return Response({'status': 'http://recit.herokuapp.com/c/view-invoice/120981957/?user_id=453672', 'message': 'Transaction was succesful'}, status=status.HTTP_200_OK)
+                Response({'status': 'failed', 'message': 'Invoice is Invalid'}, status=status.HTTP_400_BAD_REQUEST)
+            
         else:
             return Response({'status': 'failed', 'message': 'Missing Parameters'}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -741,6 +775,14 @@ class PerformTransaction(TransactionMixin, APIView):
         invoice.is_pending = False 
         return invoice.save()
         #return invoice.update(is_pending=False)
+
+    @staticmethod
+    def update_user_wallet(invoice_id, amount):
+        invoice = Invoice.objects.get(invoice_id=invoice_id)
+        return WalletBalance.objects.filter(balance_id=invoice.user).update(balance=F('balance')+ amount)
+        
+
+
 
 
 class ChargeBackView(GenericAPIView):

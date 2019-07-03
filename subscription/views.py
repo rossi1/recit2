@@ -1,4 +1,5 @@
 from enum import Enum
+import datetime as dt
 from datetime import date, datetime
 
 from dateutil.relativedelta import *
@@ -87,8 +88,8 @@ class CreateSubscriptionPlan(APIView):
 
     def update_user_plan_to_freelancing(self, customer_id):
         subscribe_plan = subscribe_stripe_plan(customer_id.id, getattr(settings, 'FREELANCE_PLAN_ID'))
-        sub_start_date = datetime.datetime.utcfromtimestamp(subscribe_plan.current_period_start)
-        sub_end_date = datetime.datetime.utcfromtimestamp(subscribe_plan.current_period_end)
+        sub_start_date = dt.datetime.utcfromtimestamp(subscribe_plan.current_period_start)
+        sub_end_date = dt.datetime.utcfromtimestamp(subscribe_plan.current_period_end)
         subscription_type = SubscriptionPlanModel.freelance_plan.value
         return SubscriptionPlan.objects.create(plan_id=self.request.user, subscription_type=subscription_type,
         subscription_start_date=sub_start_date.date(), subscription_end_date=sub_end_date.date(),
@@ -99,8 +100,8 @@ class CreateSubscriptionPlan(APIView):
        
     def update_user_plan_to_business(self, customer_id):
         subscribe_plan = subscribe_stripe_plan(customer_id.id, getattr(settings, 'BUSINESS_PLAN_ID'))
-        sub_start_date = datetime.datetime.utcfromtimestamp(subscribe_plan.current_period_start)
-        sub_end_date = datetime.datetime.utcfromtimestamp(subscribe_plan.current_period_end)
+        sub_start_date = dt.datetime.utcfromtimestamp(subscribe_plan.current_period_start)
+        sub_end_date = dt.datetime.utcfromtimestamp(subscribe_plan.current_period_end)
         subscription_type = SubscriptionPlanModel.business_plan.value
         return SubscriptionPlan.objects.create(plan_id=self.request.user, subscription_type=subscription_type, 
         subscription_start_date=sub_start_date.date(), subscription_end_date=sub_end_date.date(),
@@ -108,8 +109,8 @@ class CreateSubscriptionPlan(APIView):
 
     def update_user_plan_to_freemium(self, customer_id):
         subscribe_plan = subscribe_stripe_plan(customer_id.id, getattr(settings, 'FREEMIUM_PLAN_ID'), switch=True)
-        sub_start_date = datetime.datetime.utcfromtimestamp(subscribe_plan.current_period_start)
-        sub_end_date = datetime.datetime.utcfromtimestamp(subscribe_plan.current_period_end)
+        sub_start_date = dt.datetime.utcfromtimestamp(subscribe_plan.current_period_start)
+        sub_end_date = dt.datetime.utcfromtimestamp(subscribe_plan.current_period_end)
         
         subscription_type = SubscriptionPlanModel.freemium_plan.value
         return SubscriptionPlan.objects.create(plan_id=self.request.user, subscription_type=subscription_type,
@@ -164,8 +165,8 @@ class SwitchSubscriptionPlan(APIView):
                         "status": "failed", "message": "Unable to charge card please update card"
                     }, status=status.HTTP_400_BAD_REQUEST)
                 else:
-                    sub_start_date = datetime.datetime.utcfromtimestamp(subscribe_plan.current_period_start)
-                    sub_end_date = datetime.datetime.utcfromtimestamp(subscribe_plan.current_period_end)
+                    sub_start_date = dt.datetime.utcfromtimestamp(subscribe_plan.current_period_start)
+                    sub_end_date = dt.datetime.utcfromtimestamp(subscribe_plan.current_period_end)
                     sub_switch_date =  disabled_sub_switch()
                     SubscriptionPlan.objects.filter(plan_id=request.user).update(subscription_type=subscription_type,
                     subscription_start_date=sub_start_date.date(), sub_switch_date=sub_switch_date,
@@ -189,8 +190,8 @@ class SwitchSubscriptionPlan(APIView):
                         "error": "failed", "message": "Unable to charge card please update card"
                     }, status=status.HTTP_400_BAD_REQUEST)
                 else:
-                    sub_start_date = datetime.datetime.utcfromtimestamp(subscribe_plan.current_period_start)
-                    sub_end_date = datetime.datetime.utcfromtimestamp(subscribe_plan.current_period_end)
+                    sub_start_date = dt.datetime.utcfromtimestamp(subscribe_plan.current_period_start)
+                    sub_end_date = dt.datetime.utcfromtimestamp(subscribe_plan.current_period_end)
                     sub_switch_date =  disabled_sub_switch()
                     SubscriptionPlan.objects.filter(plan_id=request.user).update(subscription_type=subscription_type,
                     subscription_start_date=sub_start_date.date(), can_switch=False, sub_switch_date=sub_switch_date,
@@ -213,8 +214,8 @@ class SwitchSubscriptionPlan(APIView):
                         "error": "failed", "message": "Unable to charge card please update card"
                     }, status=status.HTTP_400_BAD_REQUEST)
                 else:
-                    sub_start_date = datetime.datetime.utcfromtimestamp(subscribe_plan.current_period_start)
-                    sub_end_date = datetime.datetime.utcfromtimestamp(subscribe_plan.current_period_end)
+                    sub_start_date = dt.datetime.utcfromtimestamp(subscribe_plan.current_period_start)
+                    sub_end_date = dt.datetime.utcfromtimestamp(subscribe_plan.current_period_end)
                     sub_switch_date =  disabled_sub_switch()
                     SubscriptionPlan.objects.filter(plan_id=request.user).update(subscription_type=subscription_type,
                     subscription_start_date=sub_start_date.date(), subscription_end_date=sub_end_date.date(), sub_switch_date=sub_switch_date,

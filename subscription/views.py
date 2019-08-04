@@ -52,22 +52,25 @@ class CreateSubscriptionPlan(APIView):
         tx_code = request.data.get('tf_code',  None)
         if fetch_plan is not None:
             create_customer = self.create_customer(tx_code)
+            card_last_no = create_customer.sources.data[0]['last4']
+
             cu = 'cus_F1vznWGNy8kXKz'
            
             if fetch_plan ==  SubscriptionPlanModel.freelance_plan.value:
 
                 self.update_user_plan_to_freelancing(create_customer)
-                return Response(data={'status': 'success'}, status=status.HTTP_200_OK)
+                
+                return Response(data={'status': 'success', 'last_card_no': card_last_no}, status=status.HTTP_200_OK)
         
                
             elif fetch_plan == SubscriptionPlanModel.business_plan.value:
                 self.update_user_plan_to_business(create_customer)
-                return Response(data={'status': 'success'}, status=status.HTTP_200_OK)
+                return Response(data={'status': 'success',  'last_card_no': card_last_no}, status=status.HTTP_200_OK)
 
             else:
                 create_customer = self.create_customer()
                 self.update_user_plan_to_freemium(create_customer)
-                return Response(data={'status': 'success'}, status=status.HTTP_200_OK)
+                return Response(data={'status': 'success',  'last_card_no': card_last_no}, status=status.HTTP_200_OK)
 
                
                 

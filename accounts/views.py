@@ -111,11 +111,11 @@ class LoginView(GenericAPIView):
                     else:
                         invoice_count = invoice[0]['count']
 
-                    #last_card_no = self.get_card_info(user.subscription_plan.customer_id)
+                    last_card_no = self.get_card_info(user.subscription_plan.customer_id)
 
 
                 return Response(data={'token': token, 'has_uploaded_business_account': user.buiness_info.has_uploaded_bank_details, 'pk': user.pk, 'business_pk': user.buiness_info.pk,  
-            'account_type': {'account_plan': account_plan, 'invoice_count': invoice_count, 'last_card_no': None}}, 
+            'account_type': {'account_plan': account_plan, 'invoice_count': invoice_count, 'last_card_no': last_card_no}}, 
                     status=status.HTTP_200_OK)
                    
 

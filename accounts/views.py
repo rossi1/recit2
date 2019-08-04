@@ -129,7 +129,7 @@ class LoginView(GenericAPIView):
         if customer.sources.data == []:
             card = None
         else:
-            card = customer.sources.data['last4']
+            card = customer.sources.data[0]['last4']
         
         return card
 

@@ -52,7 +52,10 @@ class CreateSubscriptionPlan(APIView):
         tx_code = request.data.get('tf_code',  None)
         if fetch_plan is not None:
             create_customer = self.create_customer(tx_code)
-            card_last_no = create_customer.sources.data['last4']
+            if create_customer.sources.data == []:
+                card_last_no = None
+            else:
+                card_last_no = create_customer.sources.data[0]['last4']
 
             cu = 'cus_F1vznWGNy8kXKz'
            

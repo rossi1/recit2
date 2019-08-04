@@ -14,7 +14,6 @@ class InventoryProducts(models.Model):
     description = models.TextField(blank=True, null=True)
     quantity = models.PositiveIntegerField(default=0)
     is_avaliable = models.BooleanField(default=False)
-    link = models.URLField()
     price = models.DecimalField(decimal_places=2, max_digits=20, default=Decimal('0.00'))
     tax = models.DecimalField(decimal_places=2, max_digits=20, null=True, blank=True)
     weight = models.CharField(max_length=50,blank=True, null=True)

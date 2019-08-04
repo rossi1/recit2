@@ -27,25 +27,6 @@ class ProductCreationView(CreateAPIView):
     permission_classes = (IsAuthenticated,)
 
 
-    def create(self, request, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        link = self.generate_product_link(serializer.validated_data['product_id'], request.user.user_id, request)
-        self.perform_create(serializer, link)
-        return Response(data=serializer.data, status=status.HTTP_201_CREATED)
-
-    @staticmethod
-    def generate_product_link(product_id, user_id, request):
-        if request.query_params.get('invoice') is not None:
-            link = getattr(settings, 'PRODUCT_INVENTORY_LINK')
-        else:
-            link = getattr(settings, 'PRODUCT_INVENTORY_LINK')
-           
-        url = '{}/{}/?user_id={}'.format(link, product_id, user_id)
-        return url 
-
-    def perform_create(self, serializer, link):
-        serializer.save(user=self.request.user, link=link)
 
 
 
@@ -86,10 +67,31 @@ def update_product_quantity_view_to_not_available(request, product_id):
 
     return Response(data={'response': 'success', 'message': 'product updated succesfully'}, status=status.HTTP_200_OK)
 
-class InvoiceProductCreateView(ProductCreationView):
+class InvoiceProductCreateView(CreateAPIView):
     authentication_classes = (SessionAuthentication,)
     queryset = InventoryInvoices
     serializer_class = ProductInvoicerSerializer
+
+    def create(self, request, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        link = self.generate_product_link(serializer.validated_data['product_id'], request.user.user_id, request)
+        self.perform_create(serializer, link)
+        return Response(data=serializer.data, status=status.HTTP_201_CREATED)
+
+    @staticmethod
+    def generate_product_link(product_id, user_id, request):
+        if request.query_params.get('invoice') is not None:
+            link = getattr(settings, 'PRODUCT_INVENTORY_LINK')
+        else:
+            link = getattr(settings, 'PRODUCT_INVENTORY_LINK')
+           
+        url = '{}/{}/?user_id={}'.format(link, product_id, user_id)
+        return url 
+
+    def perform_create(self, serializer, link):
+        serializer.save(user=self.request.user, link=link)
+
 
     
 

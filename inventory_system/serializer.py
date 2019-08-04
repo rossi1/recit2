@@ -8,7 +8,7 @@ from .models import InventoryProducts, InventoryInvoices
 class ProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = InventoryProducts
-        exclude = ('user', 'link')
+        exclude = ('user',)
 
 class ProductSerializerLising(serializers.ModelSerializer):
     class Meta:
@@ -20,7 +20,7 @@ class ProductInvoicerSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = InventoryInvoices
-        exclude = ['user'] 
+        exclude = ['user', 'created', 'link'] 
     
     def to_representation(self, obj):
         products = []

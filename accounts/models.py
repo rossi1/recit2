@@ -43,7 +43,7 @@ class BusinessInfo(models.Model):
     )
     business_name = models.CharField(max_length=250)
     business_description = models.TextField()
-    business_number = models.CharField(max_length=250)
+    business_number = models.CharField(max_length=250, null=True)
     business_address = models.CharField(max_length=250)
     business_type = models.CharField(max_length=250)
     business_size = models.CharField(max_length=250)

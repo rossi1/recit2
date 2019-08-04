@@ -21,7 +21,7 @@ from  .serializer import ProductSerializer, ProductInvoicerSerializer, ProductSe
 from  .models import InventoryProducts, InventoryInvoices
 
 class ProductCreationView(CreateAPIView):
-    authentication_classes = (SessionAuthentication,)
+   
     queryset =  InventoryProducts
     serializer_class = ProductSerializer
     permission_classes = (IsAuthenticated,)
@@ -31,7 +31,7 @@ class ProductCreationView(CreateAPIView):
 
 
 class ProductListingView(ListAPIView):
-    authentication_classes = (SessionAuthentication,)
+   
     serializer_class = ProductSerializerLising
     queryset = InventoryProducts
     permission_classes = (IsAuthenticated,)
@@ -47,7 +47,7 @@ class ProductDeleteView(DestroyAPIView):
     lookup_field = 'pk'
 
 class ProductEditView(RetrieveUpdateAPIView):
-    authentication_classes = (SessionAuthentication,)
+   
     serializer_class = ProductSerializer
     queryset = InventoryProducts
     permission_classes = (IsAuthenticated,)
@@ -68,7 +68,7 @@ def update_product_quantity_view_to_not_available(request, product_id):
     return Response(data={'response': 'success', 'message': 'product updated succesfully'}, status=status.HTTP_200_OK)
 
 class InvoiceProductCreateView(CreateAPIView):
-    authentication_classes = (SessionAuthentication,)
+    
     queryset = InventoryInvoices
     serializer_class = ProductInvoicerSerializer
 
@@ -97,7 +97,7 @@ class InvoiceProductCreateView(CreateAPIView):
 
 
 class InvoiceProductListView(ProductListingView):
-    authentication_classes = (SessionAuthentication,)
+    
     queryset = InventoryInvoices
     serializer_class = ProductInvoicerSerializer
 

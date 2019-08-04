@@ -125,10 +125,11 @@ class LoginView(GenericAPIView):
     @staticmethod
     def get_card_info(customer_id):
         customer = stripe.Customer.retrieve(customer_id)
-        if customer.sources.data[0] == []:
+        #print(customer)
+        if customer.sources.data == []:
             card = None
         else:
-            card = customer.sources.data[0]['last4']
+            card = customer.sources.data['last4']
         
         return card
 

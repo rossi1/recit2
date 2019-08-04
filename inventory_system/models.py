@@ -1,5 +1,6 @@
 from decimal import Decimal
 
+from django.contrib.postgres.fields import ArrayField
 
 from django.db import models
 from django.conf import settings
@@ -22,11 +23,11 @@ class InventoryProducts(models.Model):
         ordering = ('-created',)
 
     def __str__(self):
-        return str(self.product_id)
+        return str(self.user)
 
 
 class InventoryInvoices(models.Model):
-    inventories = models.ForeignKey(InventoryProducts, on_delete=models.CASCADE, related_name='inventory_invoicesss')
+    product_list =  ArrayField(models.CharField(max_length=250))
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='inventory_productss')
     created = models.DateTimeField(auto_now_add=True)
     link = models.URLField()

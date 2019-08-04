@@ -41,22 +41,22 @@ class BusinessInfo(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
     related_name='buiness_info'
     )
-    business_name = models.CharField(max_length=250, blank=True)
+    business_name = models.CharField(max_length=250)
     business_description = models.TextField()
-    business_number = models.CharField(max_length=250, blank=True)
-    business_address = models.CharField(max_length=250, blank=True)
-    business_type = models.CharField(max_length=250, blank=True)
-    business_size = models.CharField(max_length=250, blank=True)
-    state = models.CharField(max_length=250, blank=True)
+    business_number = models.CharField(max_length=250)
+    business_address = models.CharField(max_length=250)
+    business_type = models.CharField(max_length=250)
+    business_size = models.CharField(max_length=250)
+    state = models.CharField(max_length=250)
     business_website = models.URLField(blank=True)
     business_logo = models.ImageField(blank=True)
-    cac_number  = models.CharField(max_length=250, blank=True)
+    cac_number  = models.CharField(max_length=250)
     approved_account = models.BooleanField(default=False)
     has_uploaded_bank_details = models.BooleanField(default=False)
-    address = models.CharField(max_length=250, blank=True)
-    state = models.CharField(max_length=250, blank=True)
-    gender = models.CharField(max_length=250, blank=True)
-    phone_number = models.CharField(max_length=250, blank=True)
+    address = models.CharField(max_length=250)
+    state = models.CharField(max_length=250)
+    gender = models.CharField(max_length=250)
+    phone_number = models.CharField(max_length=250)
 
 
     def __str__(self):

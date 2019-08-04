@@ -345,11 +345,7 @@ class ViewPaidInvoice(ViewPendingInvoice):
 #@authentication_classes([SessionAuthentication,])
 @permission_classes([IsAuthenticated,])
 def invoice_detail_view(request, invoice_id=None):
-    if invoice_id is None:
-        assert invoice_id ( "Expected view {} to be called with a URL keyword argument named {}\
-            Fix your URL conf, \
-                 attribute on the view correctly".format(invoice_detail_view, invoice_id)
-        )
+    
     
     data = OrderedDict()
     invoice = get_object_or_404(Invoice, invoice_id=invoice_id)
@@ -657,10 +653,10 @@ class TransactionMixin():
         else:
             
             currency = invoice__id.currency.split('-')[1].upper()
-            amount  = int(invoice__id.project_amount)
+            amount  = round(invoice__id.project_amount)
             invoice_type = invoice__id.invoice_type
             
-            invoice = {'amount': int(amount), 'currency':  currency, 'description': 'Payment being made for {}'.format(invoice__id.invoice_id),
+            invoice = {'amount': round(amount), 'currency':  currency, 'description': 'Payment being made for {}'.format(invoice__id.invoice_id),
             'invoice_type': invoice_type}
             return invoice
 
@@ -702,11 +698,11 @@ class TransactionMixin():
 
     def charge_local_transaction(self, amount):
         charge_transaction = (3 / 100) * amount
-        return int(charge_transaction)
+        return round(charge_transaction)
 
     def charge_international_transaction(self, amount):
         charge_transaction = (5 / 100) * amount
-        return int(charge_transaction)
+        return round(charge_transaction)
 
     def calculate_charge(self, amount):
         final_amount = settings.CHARGE - amount

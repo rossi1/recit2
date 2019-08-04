@@ -23,7 +23,7 @@ from rest_framework.views import APIView
 
 
 from .models  import SubscriptionPlan
-from .utils import subscribe_stripe_plan, disabled_sub_switch
+from .utils import subscribe_stripe_plan
 from .tasks import _send_email
 
 
@@ -145,11 +145,7 @@ class SwitchSubscriptionPlan(APIView):
         #
         get_plan = request.query_params.get('sub_plan',  None)
 
-        
-        if request.user.subscription_plan.can_switch:
-            
-        
-            if get_plan == SubscriptionPlanModel.freelance_plan.value:
+        if get_plan == SubscriptionPlanModel.freelance_plan.value:
                 """
                 if request.user.subscription_plan.subscription_type == SubscriptionPlanModel.freemium_plan.value:
                     pass
@@ -167,13 +163,13 @@ class SwitchSubscriptionPlan(APIView):
                 else:
                     sub_start_date = dt.datetime.utcfromtimestamp(subscribe_plan.current_period_start)
                     sub_end_date = dt.datetime.utcfromtimestamp(subscribe_plan.current_period_end)
-                    sub_switch_date =  disabled_sub_switch()
+        
                     SubscriptionPlan.objects.filter(plan_id=request.user).update(subscription_type=subscription_type,
-                    subscription_start_date=sub_start_date.date(), sub_switch_date=sub_switch_date,
-                    subscription_end_date=sub_end_date.date(), subscription_id=subscribe_plan.id, can_switch=False)
+                    subscription_start_date=sub_start_date.date(),
+                    subscription_end_date=sub_end_date.date(), subscription_id=subscribe_plan.id)
                     return Response(data={'status': 'success'}, status=status.HTTP_200_OK)
 
-            elif get_plan == SubscriptionPlanModel.business_plan.value:
+        elif get_plan == SubscriptionPlanModel.business_plan.value:
                 """
                 if request.user.subscription_plan.subscription_type == SubscriptionPlanModel.freemium_plan.value:
                     pass
@@ -192,12 +188,13 @@ class SwitchSubscriptionPlan(APIView):
                 else:
                     sub_start_date = dt.datetime.utcfromtimestamp(subscribe_plan.current_period_start)
                     sub_end_date = dt.datetime.utcfromtimestamp(subscribe_plan.current_period_end)
-                    sub_switch_date =  disabled_sub_switch()
+                    
                     SubscriptionPlan.objects.filter(plan_id=request.user).update(subscription_type=subscription_type,
-                    subscription_start_date=sub_start_date.date(), can_switch=False, sub_switch_date=sub_switch_date,
+                    subscription_start_date=sub_start_date.date(),
                     subscription_end_date=sub_end_date.date(), subscription_id=subscribe_plan.id)
                     return Response(data={'status': 'success'}, status=status.HTTP_200_OK)
-            else:
+              
+        else:
                 subscription_type = SubscriptionPlanModel.freemium_plan.value
                 """
                 if request.user.subscription_plan.subscription_type == SubscriptionPlanModel.freemium_plan.value:
@@ -216,13 +213,19 @@ class SwitchSubscriptionPlan(APIView):
                 else:
                     sub_start_date = dt.datetime.utcfromtimestamp(subscribe_plan.current_period_start)
                     sub_end_date = dt.datetime.utcfromtimestamp(subscribe_plan.current_period_end)
-                    sub_switch_date =  disabled_sub_switch()
-                    SubscriptionPlan.objects.filter(plan_id=request.user).update(subscription_type=subscription_type,
-                    subscription_start_date=sub_start_date.date(), subscription_end_date=sub_end_date.date(), sub_switch_date=sub_switch_date,
-                    subscription_id=subscribe_plan.id,  can_switch=False)
-                    return Response(data={'status': 'success'}, status=status.HTTP_200_OK)
                     
-            return Response(data={'status': 'failed', 'message': 'unable to switch plans at the moment'}, status=status.HTTP_400_BAD_REQUEST)
+                    SubscriptionPlan.objects.filter(plan_id=request.user).update(subscription_type=subscription_type,
+                    subscription_start_date=sub_start_date.date(), subscription_end_date=sub_end_date.date(),
+                    subscription_id=subscribe_plan.id)
+                    return Response(data={'status': 'success'}, status=status.HTTP_200_OK)
+   
+
+
+      
+            
+        
+                             
+        return Response(data={'status': 'failed', 'message': 'unable to switch plans at the moment'}, status=status.HTTP_400_BAD_REQUEST)
 
 
 

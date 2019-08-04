@@ -21,7 +21,7 @@ from  .serializer import ProductSerializer, ProductInvoicerSerializer, ProductSe
 from  .models import InventoryProducts, InventoryInvoices
 
 class ProductCreationView(CreateAPIView):
-    #authentication_classes = (SessionAuthentication,)
+    authentication_classes = (SessionAuthentication,)
     queryset =  InventoryProducts
     serializer_class = ProductSerializer
     permission_classes = (IsAuthenticated,)
@@ -50,7 +50,7 @@ class ProductCreationView(CreateAPIView):
 
 
 class ProductListingView(ListAPIView):
-    #authentication_classes = (SessionAuthentication,)
+    authentication_classes = (SessionAuthentication,)
     serializer_class = ProductSerializerLising
     queryset = InventoryProducts
     permission_classes = (IsAuthenticated,)
@@ -66,6 +66,7 @@ class ProductDeleteView(DestroyAPIView):
     lookup_field = 'pk'
 
 class ProductEditView(RetrieveUpdateAPIView):
+    authentication_classes = (SessionAuthentication,)
     serializer_class = ProductSerializer
     queryset = InventoryProducts
     permission_classes = (IsAuthenticated,)
@@ -86,8 +87,11 @@ def update_product_quantity_view_to_not_available(request, product_id):
     return Response(data={'response': 'success', 'message': 'product updated succesfully'}, status=status.HTTP_200_OK)
 
 class InvoiceProductCreateView(ProductCreationView):
+    authentication_classes = (SessionAuthentication,)
     queryset = InventoryInvoices
     serializer_class = ProductInvoicerSerializer
+
+    
 
 
 class InvoiceProductListView(ProductListingView):
@@ -111,7 +115,7 @@ class InvoiceProductDeleteView(ProductDeleteView):
 def view_product_for_payment(request, product_id):
     user_id = request.query_params.get('user_id', None)
     if user_id is None:
-        raise ValidationError('The request made to this server was bad')
+        raise ValidationError('user id missing')
 
     data = OrderedDict()
     
@@ -119,12 +123,11 @@ def view_product_for_payment(request, product_id):
     
     try:
         user = get_user_model().objects.get(user_id=user_id)
-        product = InventoryProducts.objects.filter(product_id=product_id)
+        product = InventoryInvoices.objects.get(product_id=product_id)
     except get_user_model().DoesNotExist:
        
-        raise  ValidationError('The request made to this server was bad')
-    except InventoryProducts.DoestNotExist:
-       raise  ValidationError('The request made to this server was bad')
+        raise  ValidationError('user is invalid')
+    
 
 
 
@@ -139,7 +142,7 @@ def view_product_for_payment(request, product_id):
     
     
     data['user'] = user_detail
-    prods = ProductSerializerLising(product, many=True)
+    prods = ProductInvoicerSerializer(product)
     to_json = serializers.serialize('json', product) 
     data['product_detail'] = to_json
     print(data)

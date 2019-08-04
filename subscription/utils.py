@@ -32,8 +32,3 @@ def upgrade_and_downgrade_stripe_plan(subscription_id, plan_id):
         return subscription
 
 
-
-def disabled_sub_switch():
-    today_date = date.today()
-    disable_sub_switch_date = today_date + relativedelta(days=+1)
-    return disable_sub_switch_date

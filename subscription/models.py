@@ -1,4 +1,3 @@
-
 from django.db import models
 from django.conf import settings
 
@@ -9,8 +8,8 @@ class SubscriptionPlan(models.Model):
     subscription_start_date = models.DateField(null=True)
     subscription_type = models.CharField(max_length=50, null=True)
     customer_id = models.CharField(max_length=50, null=True)
-    can_switch = models.BooleanField(default=True)
-    sub_switch_date = models.DateField(null=True)
+    #can_switch = models.BooleanField(default=True)
+    #sub_switch_date = models.DateField(null=True)
     #card_source =  models.CharField(max_length=50, null=True)
     subscription_id = models.CharField(max_length=50, null=True)
 

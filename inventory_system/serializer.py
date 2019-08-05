@@ -29,9 +29,14 @@ class ProductInvoicerSerializer(serializers.ModelSerializer):
         ret.pop('product_list')
         
         for ids in product_ids:
-            products.append(InventoryProducts.objects.filter(pk=ids).values('title',
+            for _ in ids:
+                if _ == '[' or  _ == ']':
+                    continue
+                else:
+                    products.append(InventoryProducts.objects.filter(pk=_).values('title',
             'description', 'quantity', 'is_avaliable', 'price', 'tax', 'weight'))
     
+                
         ret['products'] = products
  
         return ret

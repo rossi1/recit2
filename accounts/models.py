@@ -41,7 +41,7 @@ class BusinessInfo(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
     related_name='buiness_info'
     )
-    business_name = models.CharField(max_length=250)
+    business_name = models.CharField(max_length=250, editable=False)
     business_description = models.TextField()
     business_number = models.CharField(max_length=250, null=True)
     business_address = models.CharField(max_length=250)

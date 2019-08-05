@@ -16,6 +16,6 @@ urlpatterns =  [
     path('view-products/', views.ProductListingView.as_view(), name='product_list_view'),
     path('update-quantity/<int:product_id>/', views.update_product_quantity_view_to_not_available, name='update_product'),
     path('', include(invoice_urls)),
-    path('view-product-data/<str:product_id>/', views.view_product_for_payment, name='view_product_data')
-    
+    path('view-product-data/<str:product_id>/', views.view_product_for_payment, name='view_product_data'),
+    path('search-product/', views.SearchProductView.as_view(), name='search_product')
 ]

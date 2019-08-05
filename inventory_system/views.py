@@ -12,7 +12,7 @@ from rest_framework.response import Response
 from rest_framework.decorators import permission_classes, authentication_classes, api_view
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.authentication import SessionAuthentication
-from rest_framework import status
+from rest_framework import status, filters
 from rest_framework.settings import api_settings
 from rest_framework.validators import ValidationError
 from rest_framework.generics import CreateAPIView, RetrieveUpdateAPIView, DestroyAPIView, ListAPIView, RetrieveAPIView, get_object_or_404
@@ -21,6 +21,7 @@ from  .serializer import ProductSerializer, ProductInvoicerSerializer, ProductSe
 from  .models import InventoryProducts, InventoryInvoices
 
 class ProductCreationView(CreateAPIView):
+    authentication_classes = (SessionAuthentication, )
    
     queryset =  InventoryProducts
     serializer_class = ProductSerializer
@@ -28,9 +29,6 @@ class ProductCreationView(CreateAPIView):
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
-
-
-
 
 
 class ProductListingView(ListAPIView):
@@ -56,6 +54,17 @@ class ProductEditView(RetrieveUpdateAPIView):
     permission_classes = (IsAuthenticated,)
     lookup_field = 'pk'
 
+class SearchProductView(ListAPIView):
+    #authentication_classes = (SessionAuthentication,)
+    queryset = InventoryProducts
+    serializer_class = ProductSerializer
+    permission_classes = (IsAuthenticated,)
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['^title']
+
+    def get_queryset(self):
+        return self.queryset.objects.filter(user=self.request.user)
+
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated,])
@@ -71,6 +80,8 @@ def update_product_quantity_view_to_not_available(request, product_id):
     return Response(data={'response': 'success', 'message': 'product updated succesfully'}, status=status.HTTP_200_OK)
 
 class InvoiceProductCreateView(CreateAPIView):
+    #authentication_classes = (SessionAuthentication, )
+
     
     queryset = InventoryInvoices
     serializer_class = ProductInvoicerSerializer
@@ -100,6 +111,8 @@ class InvoiceProductCreateView(CreateAPIView):
 
 
 class InvoiceProductListView(ProductListingView):
+    #uthentication_classes = (SessionAuthentication, )
+
     
     queryset = InventoryInvoices
     serializer_class = ProductInvoicerSerializer

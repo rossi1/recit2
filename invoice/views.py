@@ -211,8 +211,7 @@ class CreateInvoice(CreateAPIView):
             elif option != '' and option.lower() == Medium.emailsms.value:
                 _send_email.delay('Invoice', message_body, client.client_email)
                 send_sms.delay(generate_link, client.client_phone_number)
-            
-            
+        
 
         else:
             if option != '' and option.lower() == Medium.email.value:
@@ -597,7 +596,7 @@ def view_invoice_for_payment(request, invoice_id):
     except get_user_model().DoesNotExist:
        
         raise  ValidationError('The request made to this server was bad')
-    except Invoice.DoestNotExist:
+    except Invoice.DoesNotExist:
        raise  ValidationError('The request made to this server was bad')
 
 

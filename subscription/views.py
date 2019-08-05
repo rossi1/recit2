@@ -225,10 +225,6 @@ class SwitchSubscriptionPlan(APIView):
                     subscription_id=subscribe_plan.id)
                     return Response(data={'status': 'success'}, status=status.HTTP_200_OK)
    
-
-
-      
-            
         
                              
         return Response(data={'status': 'failed', 'message': 'unable to switch plans at the moment'}, status=status.HTTP_400_BAD_REQUEST)

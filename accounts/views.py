@@ -24,7 +24,7 @@ from invoice.models  import Invoice
 
 from .serializer import UserSerializer, LoginSerializer, PasswordResetSerializer,  PasswordSerializer, BusinessSerializer
 from .utils import  password_reset_code, generate_safe_token, validate_code, get_tokens_for_user
-from .authentication import JwtAuthentication
+#from .authentication import JwtAuthentication
 from .models import BusinessInfo
 
 

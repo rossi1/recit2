@@ -29,7 +29,7 @@ from rest_framework.validators import ValidationError
 from rest_framework.generics import CreateAPIView, RetrieveUpdateAPIView, DestroyAPIView, ListAPIView, RetrieveAPIView, get_object_or_404, GenericAPIView
 
 from cashtarg._celery import app
-from accounts.authentication import JwtAuthentication
+#from accounts.authentication import JwtAuthentication
 
 
 from .models import Invoice,  ClientInfo, AutomatedReminder

@@ -7,8 +7,8 @@ from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.generics import GenericAPIView, CreateAPIView, RetrieveUpdateAPIView, DestroyAPIView, RetrieveAPIView, get_object_or_404
 
-from accounts.authentication import JwtAuthentication
-from accounts.utils import encode_user_payload
+#from accounts.authentication import JwtAuthentication
+from accounts.utils import get_tokens_for_user
 
 
 from .serializer import SecurePassword, AddBankSerializer, RequestFundSerializer
@@ -26,7 +26,7 @@ def gain_secure_token(request):
     if user is None:
         return Response({'invalid credentials': 'invalid credentials'}, status=status.HTTP_400_BAD_REQUEST)
     else:
-        token = encode_user_payload(user)
+        token = get_tokens_for_user(user)
         has_uploaded_bank = False
         try:
             user = BankDetails.objects.get(bank_id=request.user)

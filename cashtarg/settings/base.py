@@ -207,7 +207,7 @@ SIMPLE_JWT = {
     'BLACKLIST_AFTER_ROTATION': True,
 
     'ALGORITHM': 'HS256',
-    'SIGNING_KEY': env("DJANGO_SECRET_KEY"),
+    'SIGNING_KEY': config('SECRET_KEY') #env("DJANGO_SECRET_KEY"),
     'VERIFYING_KEY': None,
 
     'AUTH_HEADER_TYPES': ('Bearer',),

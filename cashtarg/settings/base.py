@@ -172,8 +172,12 @@ EMAIL_HOST = 'smtp.sendgrid.net'
 EMAIL_HOST_USER = 'apikey'
 EMAIL_HOST_PASSWORD = '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'
 EMAIL_PORT = 587
+
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 
+JWT_SECRET = SECRET_KEY
+JWT_ALGORITHM = 'HS256'
+JWT_EXP_DELTA_MINTUES = 60
 
 CORS_ALLOW_HEADERS = (
     'accept',
@@ -219,12 +223,17 @@ DATA_UPLOAD_MAX_NUMBER_FIELDS = 10240
 ACCOUNT_SID = 'ACe16929531bae78596e50b0185a877442'
 AUTH_TOKEN = '31fcedd10b248ef38f383c3cd98f7852'
 
+EMAIL_ADMINS = [
+    'emmanuelukwuegbu2016@gmail.com',
+    'creative.joe007@gmail.com'
+]
+
 
 ONE_TIME  = 'one-time'
 RECURRING_BILLING = 'recurring-billing'
-RECURRING_WEEKLY = 'weekly'
-RECURRING_MONTHLY = 'monthly'
-RECURRING_DAILY = 'daily'
+RECURRING_WEEKLY = 'week'
+RECURRING_MONTHLY = 'month'
+RECURRING_DAILY = 'day'
 
 AUTOMATED_REMINDERS_DAYS = { 
     'MONDAY': 0,
@@ -246,6 +255,7 @@ PRODUCT_INVENTORY_LINK = 'http://recit.herokuapp.com/c/product'
 PRODUCT_INVENTORY_INVOICE_LINK = 'http://recit.herokuapp.com/c/product/invoice'
 
 FREEMIUM_PLAN_LIMIT = 6
+FREELANCE_PLAN_LIMIT = 5
 
 # stripe plan id 
 
@@ -261,3 +271,6 @@ cloudinary.config(
   api_secret = config('CLOUDINARY_SECRET_KEY')
 )
 """
+
+DEFAULT_CURRENCY= 'NGN'
+ACCESS_KEY = config('ACCESS_KEY')

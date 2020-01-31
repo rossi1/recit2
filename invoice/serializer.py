@@ -6,6 +6,7 @@ from django.contrib.auth import get_user_model
 from django.conf import settings
 from django.core.serializers.json import DjangoJSONEncoder
 from accounts.serializer import generated_unique_id
+from django.core.validators import FileExtensionValidator
 
 
 from .models  import Invoice, ClientInfo, AutomatedReminder
@@ -68,3 +69,11 @@ class AutomatedReminderSerializer(serializers.ModelSerializer):
     class Meta:
         model = AutomatedReminder
         exclude = ('invoice', 'days_of_the_week')
+
+
+class ChargeBackSerializer(serializers.Serializer):
+    invoice_id = serializers.CharField(max_length=50, required=True)
+    contact_mail = serializers.EmailField(required=True)
+    message = serializers.CharField(max_length=400, required=True)
+    contact_name = serializers.CharField(max_length=50, required=True)
+    dynamic_content = serializers.FileField(required=False)

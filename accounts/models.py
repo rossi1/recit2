@@ -25,7 +25,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     objects = UserManager()
 
     def __str__(self):
-        return str(self.pk)
+        return str(self.email)
 
 
 
@@ -33,16 +33,16 @@ class BusinessInfo(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
     related_name='buiness_info'
     )
-    business_name = models.CharField(max_length=250)
+    business_name = models.CharField(max_length=250, editable=False)
     business_description = models.TextField()
-    business_number = models.CharField(max_length=250, blank=True)
+    business_number = models.CharField(max_length=250, null=True)
     business_address = models.CharField(max_length=250)
-    business_type = models.CharField(max_length=250, blank=True)
+    business_type = models.CharField(max_length=250)
     business_size = models.CharField(max_length=250)
     state = models.CharField(max_length=250)
     business_website = models.URLField(blank=True)
-    business_logo = models.ImageField()
-    cac_number  = models.CharField(max_length=250, blank=True)
+    business_logo = models.ImageField(blank=True)
+    cac_number  = models.CharField(max_length=250)
     approved_account = models.BooleanField(default=False)
     has_uploaded_bank_details = models.BooleanField(default=False)
     address = models.CharField(max_length=250)

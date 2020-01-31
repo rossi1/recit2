@@ -11,5 +11,6 @@ urlpatterns = [
     path('password-reset/', views.reset_password, name='pasword-reset'),
     path('create-business-account/', views.create_business_account, name='create-business'),
     path('update-business-account/<int:pk>/', views.UpdateBusinessAccount.as_view(), name='update-account'),
-    path('verify-business-name/', views.validate_business_name, name='validate_business_name')
+    path('verify-business-name/', views.validate_business_name, name='validate_business_name'),
+    path('disable-account/', views.disabled_account, name='disable_account')
 ]

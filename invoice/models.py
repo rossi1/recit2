@@ -11,7 +11,7 @@ from django.utils import timezone
 
 class Invoice(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='invoices')
-    invoice_id = models.IntegerField()
+    invoice_id = models.IntegerField(unique=True)
     invoice_type = models.CharField(max_length=20)
     created = models.DateField(auto_now_add=True)
     due_date = models.DateField(default=timezone.now)

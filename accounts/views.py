@@ -5,6 +5,7 @@ from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail import send_mail
 from django.contrib.auth import login
+from django.db.models import Count
 
 
 from rest_framework.generics import CreateAPIView, GenericAPIView, RetrieveUpdateAPIView
@@ -14,7 +15,12 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 
+import stripe
+
+
 from subscription.models import SubscriptionPlan
+from subscription.views import SubscriptionPlanModel
+from invoice.models  import Invoice
 
 from .serializer import UserSerializer, LoginSerializer, PasswordResetSerializer,  PasswordSerializer, BusinessSerializer
 from .utils import  password_reset_code, generate_safe_token, validate_code, get_tokens_for_user
@@ -22,9 +28,8 @@ from .authentication import JwtAuthentication
 from .models import BusinessInfo
 
 
-class SubscriptionPlanModel(Enum):
-    freelance_plan = 'freelance_plan'
-    business_plan = 'business_plan'
+
+stripe.api_key = 'sk_test_wkwaWE7YeaKbYZd5Yz5dpbrF'
 
 
 class SignupView(CreateAPIView):
@@ -53,6 +58,12 @@ class LoginView(GenericAPIView):
            
             if user is None:
                 return Response({'invalid credentials': 'invalid login credentials'}, status=status.HTTP_400_BAD_REQUEST)
+
+            elif not user.is_active:
+                return Response({'status': 'failed', 'message': 
+                'Account disabled'}, status=status.HTTP_400_BAD_REQUEST)
+
+
             else:
                 token = get_tokens_for_user(user)
 
@@ -60,14 +71,64 @@ class LoginView(GenericAPIView):
                     account_plan =  SubscriptionPlan.objects.get(plan_id=user)
                 except SubscriptionPlan.DoesNotExist:
                     account_plan = None
+                    invoice_count = 0
+                    last_card_no = None
                 else:
                     account_plan = account_plan.subscription_type
+                    if account_plan == SubscriptionPlanModel.freelance_plan.value:
+                        invoice_type = getattr(settings, 'ONE_TIME')
+                        invoice = Invoice.objects.filter(user=user, invoice_type=invoice_type,
+                        created__range=[user.subscription_plan.subscription_start_date, user.subscription_plan.subscription_end_date]).exclude(is_pending=False).values('created').annotate(count=Count('pk'))
+                        #invoice_count = invoice[0]['count']
+                    elif account_plan == SubscriptionPlanModel.business_plan.value:
+                        invoice_one_time = getattr(settings, 'ONE_TIME')
+                        invoice_type = [getattr(settings, 'RECURRING_WEEKLY'), getattr(settings, 'RECURRING_MONTHLY'), getattr(settings, 'RECURRING_DAILY')]
+                        invoice = Invoice.objects.filter(user=user, invoice_type__in=invoice_type,
+                        created__range=[user.subscription_plan.subscription_start_date, 
+                        user.subscription_plan.subscription_end_date]).exclude(is_pending=False).values('created').annotate(count=Count('pk'))
+                        
+                    else:
+                        invoice = Invoice.objects.filter(user=user,
+                        created__range=[user.subscription_plan.subscription_start_date, 
+                        user.subscription_plan.subscription_end_date]).exclude(is_pending=False).values('created').annotate(count=Count('pk'))
+                        
 
-                return Response(data={'token': token, 'has_uploaded_business_account': user.buiness_info.has_uploaded_bank_details, 'pk': user.pk,  'account_type': {'account_plan': account_plan, 'trial': getattr(account_plan, 'is_trial', None)}}, 
+
+                    if not invoice.exists():
+                        invoice_count = 0
+                    else:
+                        invoice_count = invoice[0]['count']
+
+                    last_card_no = self.get_card_info(user.subscription_plan.customer_id)
+
+
+                return Response(data={'token': token, 'has_uploaded_business_account': user.buiness_info.has_uploaded_bank_details, 'pk': user.pk, 'business_pk': user.buiness_info.pk,  
+            'account_type': {'account_plan': account_plan, 'invoice_count': invoice_count, 'last_card_no': last_card_no}}, 
                     status=status.HTTP_200_OK)
 
         else:
             return Response(serializer.errors)
+
+    @staticmethod
+    def get_card_info(customer_id):
+        customer = stripe.Customer.retrieve(customer_id)
+        #print(customer)
+        if customer.sources.data == []:
+            card = None
+        else:
+            card = customer.sources.data[0]['last4']
+        
+        return card
+
+
+class LogoutView(GenericAPIView):
+    
+ 
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request):
+        return Response({'message': 'True', 'reason': 'logged out successfully', 'res':True}, status=status.HTTP_200_OK)
+
 
 @api_view(['POST'])
 def reset_password_view(request):
@@ -119,6 +180,7 @@ def reset_password(request):
 
    
 class UpdateBusinessAccount(RetrieveUpdateAPIView):
+    
     permission_classes = (IsAuthenticated,)
     serializer_class =  BusinessSerializer
     queryset = BusinessInfo
@@ -148,3 +210,10 @@ def validate_business_name(request):
         return Response(data=True, status=status.HTTP_302_FOUND)
     else:
         return Response(data=False, status=status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated,])
+def disabled_account(request):
+    get_user_model().objects.filter(email=request.user.email).update(is_active=False)
+    return Response({'status': 'sucesss', 'message': 'Account disabled'}, status=status.HTTP_200_OK)

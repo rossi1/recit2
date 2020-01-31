@@ -35,11 +35,7 @@ class UserSerializer(serializers.ModelSerializer):
             }
         }
 
-    def create(self, validated_data):
-        user = create_user(**validated_data)
-        user
-        return user
-
+        
 
 class LoginSerializer(serializers.Serializer):
     email = serializers.EmailField()
@@ -54,7 +50,13 @@ class PasswordSerializer(serializers.Serializer):
 
 
 class BusinessSerializer(serializers.ModelSerializer):
+    account = UserSerializer()
     class Meta:
         model = BusinessInfo
         exclude = ('user', 'approved_account', 'has_uploaded_bank_details' )
+
+    def create(self, validated_data):
+        account = create(**validated_data.pop("account"))
+        return BusinessInfo(user=account, **validated_data)
+        
 

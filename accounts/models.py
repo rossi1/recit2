@@ -7,10 +7,7 @@ from django.conf import settings
 #from cloudinary.models import CloudinaryField
 
 from rest_framework import exceptions
-
-
 from .managers import UserManager
-
 
 class User(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(max_length=120, unique=True)
@@ -27,13 +24,8 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     objects = UserManager()
 
-
-    
     def __str__(self):
         return str(self.pk)
-
-
-
 
 
 

@@ -9,7 +9,6 @@ from django.utils import timezone
 
 # Create your models here.
 
-
 class Invoice(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='invoices')
     invoice_id = models.IntegerField()
@@ -26,10 +25,8 @@ class Invoice(models.Model):
     client_email = models.EmailField(unique=True, blank=True, null=True)
     client_phone_number = models.CharField(max_length=50, blank=True, null=True)
     client_address = models.CharField(max_length=50, blank=True, null=True)
-
-
     
-    client_id = models.ForeignKey('ClientInfo', on_delete=models.CASCADE, related_name='auto_reminder', null=True)
+    client_id = models.ForeignKey('ClientInfo', on_delete=models.CASCADE, related_name='client', null=True)
 
     project_amount = models.DecimalField(decimal_places=2, max_digits=20)
     #set_payment = models.CharField(max_length=20, blank=True)
@@ -65,7 +62,6 @@ class AutomatedReminder(models.Model):
 
 class ClientInfo(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='client_info')
-    
     client_name = models.CharField(max_length=50)
     client_email = models.EmailField(unique=True)
     client_phone_number = models.CharField(max_length=50)

@@ -11,7 +11,6 @@ class SubscriptionPlan(models.Model):
     customer_id = models.CharField(max_length=50, null=True)
     subscription_id = models.CharField(max_length=50, null=True)
 
-
     def __str__(self):
         return str(self.plan_id)
 

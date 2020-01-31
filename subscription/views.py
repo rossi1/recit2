@@ -5,8 +5,6 @@ from datetime import date
 import stripe
 from dateutil.relativedelta import *
 
-
-
 from django.conf import settings
 
 from rest_framework.response import Response
@@ -20,10 +18,6 @@ from rest_framework.views import APIView
 
 from .models  import SubscriptionPlan
 from .utils import subscribe_stripe_plan
-
-
-
-
 
 
 class BusinessAccountType(Enum):
@@ -51,7 +45,6 @@ class CreateSubscriptionPlan(APIView):
                 self.update_user_plan_to_freelancing(create_customer)
                 return Response(data={'status': 'success'}, status=status.HTTP_200_OK)
         
-               
             elif fetch_plan == SubscriptionPlanModel.business_plan.value:
                 self.update_user_plan_to_business(create_customer)
                 return Response(data={'status': 'success'}, status=status.HTTP_200_OK)
@@ -60,19 +53,12 @@ class CreateSubscriptionPlan(APIView):
                 self.update_user_plan_to_freemium(create_customer)
                 return Response(data={'status': 'success'}, status=status.HTTP_200_OK)
 
-               
-                
+            
         return  Response('Failed to get plan')
 
     def create_customer(self, token):
-        create = stripe.Customer.create(
-            email=self.request.user.email,
-            source=token)
-        return create
-
+        return stripe.Customer.create( email=self.request.user.email, source=token)
     
-
-
     def update_user_plan_to_freelancing(self, customer_id):
         subscribe_plan = subscribe_stripe_plan(customer_id.id, getattr(settings, 'FREELANCE_PLAN_ID'))
         sub_start_date = datetime.datetime.utcfromtimestamp(subscribe_plan.current_period_start)
@@ -82,8 +68,6 @@ class CreateSubscriptionPlan(APIView):
         subscription_start_date=sub_start_date.date(), subscription_end_date=sub_end_date.date(),
         customer_id=customer_id.id, subscription_id=subscribe_plan.id)
 
-
-     
        
     def update_user_plan_to_business(self, customer_id):
         subscribe_plan = subscribe_stripe_plan(customer_id.id, getattr(settings, 'BUSINESS_PLAN_ID'))
@@ -104,9 +88,6 @@ class CreateSubscriptionPlan(APIView):
         customer_id=customer_id.id, subscription_id=subscribe_plan.id)
 
        
-    
-    
-        
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def cancel_subscription_plan(request):
@@ -115,8 +96,6 @@ def cancel_subscription_plan(request):
    sub_start_date = datetime.datetime.utcfromtimestamp(freemium_plan.current_period_start)
    sub_end_date = datetime.datetime.utcfromtimestamp(freemium_plan.current_period_end)
    subscription_type = SubscriptionPlanModel.freemium_plan.value
-   SubscriptionPlan.objects.filter(plan_id=request.user).update(subscription_type=subscription_type,
-   subscription_start_date=sub_start_date.date(), 
-   subscription_end_date=sub_end_date.date(),
-   subscription_id=freemium_plan.id)
-   return Response(data={'status': 'success'}, status=status.HTTP_200_OK)
+   SubscriptionPlan.objects.filter(plan_id=request.user).update(subscription_type=subscription_type, 
+   subscription_start_date=sub_start_date.date(), subscription_end_date=sub_end_date.date(), subscription_id=freemium_plan.id)
+   return Response(data={'status': 'success'}, st  atus=status.HTTP_200_OK)

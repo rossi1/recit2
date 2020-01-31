@@ -15,7 +15,6 @@ DEBUG = config('DEBUG', cast=bool)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
-
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
 
@@ -146,7 +145,7 @@ REST_FRAMEWORK = {
     ),
     'DEFAULT_AUTHENTICATION_CLASSES': (
         
-        'accounts.authentication.JwtAuthentication',
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 10
@@ -166,7 +165,6 @@ CORS_ALLOW_METHODS = (
 )
 
 
-
 STATIC_URL = '/static/'
 
 EMAIL_USE_TLS = True
@@ -175,10 +173,6 @@ EMAIL_HOST_USER = 'apikey'
 EMAIL_HOST_PASSWORD = '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'
 EMAIL_PORT = 587
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-
-JWT_SECRET = SECRET_KEY
-JWT_ALGORITHM = 'HS256'
-JWT_EXP_DELTA_MINTUES = 60
 
 
 CORS_ALLOW_HEADERS = (
@@ -199,6 +193,26 @@ CORS_ALLOW_HEADERS = (
     'x_Token',
     'x_token'
 )
+
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(days=4),  # testing
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),  # testing
+    'ROTATE_REFRESH_TOKENS': False,
+    'BLACKLIST_AFTER_ROTATION': True,
+
+    'ALGORITHM': 'HS256',
+    'SIGNING_KEY': env("DJANGO_SECRET_KEY"),
+    'VERIFYING_KEY': None,
+
+    'AUTH_HEADER_TYPES': ('Bearer',),
+    'USER_ID_FIELD': 'id',
+    'USER_ID_CLAIM': 'user_id',
+
+    'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),
+    'TOKEN_TYPE_CLAIM': 'token_type',
+
+}
 
 DATA_UPLOAD_MAX_NUMBER_FIELDS = 10240
 

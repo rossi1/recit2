@@ -1,4 +1,3 @@
-import jwt
 from datetime import timedelta, datetime
 
 from django.conf import settings
@@ -7,7 +6,7 @@ from django.core.signing import BadSignature , SignatureExpired
 from django.utils.crypto import get_random_string
 
 from rest_framework.validators import ValidationError
-
+from rest_framework_simplejwt.tokens import RefreshToken
 
 
 def password_reset_code():
@@ -34,14 +33,10 @@ def validate_code(code):
         return tokenize
 
 
-def encode_user_payload(user):
-        if isinstance(user, str):
-                payload = {
-                        'user': user ,
-                        'exp': datetime.utcnow() + timedelta(minutes=settings.JWT_EXP_DELTA_MINTUES)}
-        else:
-                payload = {
-                        'user': user.email ,
-                        'exp': datetime.utcnow() + timedelta(minutes=settings.JWT_EXP_DELTA_MINTUES)}
-        jwt_token = jwt.encode(payload, settings.JWT_SECRET, settings.JWT_ALGORITHM)
-        return jwt_token.decode('utf-8')
+def get_tokens_for_user(user):
+    refresh = RefreshToken.for_user(user)
+
+    return {
+        'refresh': str(refresh),
+        'access': str(refresh.access_token),
+    }

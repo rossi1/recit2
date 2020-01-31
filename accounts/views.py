@@ -14,16 +14,12 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 
-
 from subscription.models import SubscriptionPlan
 
-
 from .serializer import UserSerializer, LoginSerializer, PasswordResetSerializer,  PasswordSerializer, BusinessSerializer
-from .utils import encode_user_payload, password_reset_code, generate_safe_token, validate_code
+from .utils import  password_reset_code, generate_safe_token, validate_code, get_tokens_for_user
 from .authentication import JwtAuthentication
 from .models import BusinessInfo
-
-
 
 
 class SubscriptionPlanModel(Enum):
@@ -32,31 +28,22 @@ class SubscriptionPlanModel(Enum):
 
 
 class SignupView(CreateAPIView):
-    serializer_class = UserSerializer
-    queryset = get_user_model()
-
-
+    serializer_class = BusinessSerializer
+    
     def create(self, request, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-
-        
-        encode = encode_user_payload(serializer.validated_data['email'])
-        user_pk = get_user_model().objects.get(email__iexact=serializer.validated_data['email'])
-        
-        
-
-        return Response(data={'details': serializer.data, 'token': encode, 'pk': user_pk.pk,
-        'full_name': "{} {}".format(serializer.validated_data['last_name'], serializer.validated_data['first_name'])}, status=status.HTTP_201_CREATED)
+        self.perform_create(serializer
+        user = get_user_model().objects.get(email__iexact=serializer.validated_data['account']['email'])
+        token = get_tokens_for_user(user)
+        return Response(data={'details': serializer.data, 'token': token, 'pk': user.pk,
+        'full_name': "{} {}".format(serializer.validated_data['account']['last_name'], serializer.validated_data['account']['first_name'])}, status=status.HTTP_201_CREATED)
 
 
 class LoginView(GenericAPIView):
     serializer_class = LoginSerializer
     
-
     def post(self, request):
-        
         serializer = self.get_serializer(data=request.data)
 
         if serializer.is_valid():
@@ -65,12 +52,9 @@ class LoginView(GenericAPIView):
             user = authenticate(email=email, password=password)
            
             if user is None:
-                
-                
                 return Response({'invalid credentials': 'invalid login credentials'}, status=status.HTTP_400_BAD_REQUEST)
-
             else:
-                token = encode_user_payload(user)
+                token = get_tokens_for_user(user)
 
                 try:
                     account_plan =  SubscriptionPlan.objects.get(plan_id=user)
@@ -81,20 +65,9 @@ class LoginView(GenericAPIView):
 
                 return Response(data={'token': token, 'has_uploaded_business_account': user.buiness_info.has_uploaded_bank_details, 'pk': user.pk,  'account_type': {'account_plan': account_plan, 'trial': getattr(account_plan, 'is_trial', None)}}, 
                     status=status.HTTP_200_OK)
-                   
 
         else:
             return Response(serializer.errors)
-
-
-class LogoutView(GenericAPIView):
-    
- 
-    permission_classes = (IsAuthenticated,)
-
-    def get(self, request):
-        return Response({'message': 'True', 'reason': 'logged out successfully', 'res':True}, status=status.HTTP_200_OK)
-
 
 @api_view(['POST'])
 def reset_password_view(request):
@@ -128,7 +101,6 @@ def reset_code_verification(request):
 
 @api_view(['POST'])
 def reset_password(request):
-    #email = request.query_params.get('email')
     tokenize_code = request.query_params.get('code')
     serializer = PasswordSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
@@ -141,9 +113,7 @@ def reset_password(request):
         password =  serializer.validated_data['password']
         queryset.password = password
         queryset.set_password(password)
-        queryset.save()
-       
-        
+        queryset.save() 
     return Response(data='Password Changed Succesfully' , status=status.HTTP_200_OK)
 
 
@@ -170,7 +140,6 @@ def create_business_account(request):
         return Response(data='Account created successfully', status=status.HTTP_201_CREATED)
             
 
-    
 @api_view(['GET'])
 def validate_business_name(request):
     business_name = request.query_params.get('business_name', '')

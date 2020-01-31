@@ -10,13 +10,10 @@ from django.core.mail import send_mail
 from django.urls import reverse
 from django.core.serializers.json import DjangoJSONEncoder
 from django.conf import settings
+from django.db.models import Count
 
 
 from twilio.rest import Client
-
-
-from django.db.models import Count
-
 
 from rest_framework.response import Response
 from rest_framework.decorators import permission_classes, authentication_classes, api_view
@@ -46,74 +43,6 @@ class ReminderType(Enum):
     everyday = 'EVERYDAY'
 
 
-def invoice_data_with_client(invoice, exclude=False):
-
-
-    data = {
-                    'pk': invoice.pk,
-                    'client_name': invoice.client_id.client_name,
-                    'client_address': invoice.client_id.client_address,
-                    'client_email': invoice.client_id.client_email,
-                    'client_phone_number': invoice.client_id.client_phone_number,
-                    'invoice_id': invoice.invoice_id,
-                    'invoice_type': invoice.invoice_type,
-                    'created': invoice.created,
-                    'due_date': invoice.due_date,
-                    'is_pending': invoice.is_pending,
-                    'data': invoice.data,
-                    'description': invoice.description,
-                    'link': invoice.link,
-                    #'logo': invoice.logo,
-                    'project_amount': invoice.project_amount,
-                    'currency': invoice.currency,
-                    'tax': invoice.tax,
-                    'shipping_fee': invoice.shipping_fee,
-                    'can_create_reminder': invoice.can_create_reminder
-                    
-                }
-
-    if exclude:
-        del data['can_create_reminder']
-        del data['pk']
-
-   
-    return data
-
-def invoice_data_with__no_client(invoice, exclude=False):
-    
-    data = {
-                    'pk': invoice.pk,
-                    'client_name': invoice.client_name,
-                    'client_address': invoice.client_address,
-                    'client_email': invoice.client_email,
-                    'client_phone_number': invoice.client_phone_number,
-                    'invoice_id': invoice.invoice_id,
-                    'invoice_type': invoice.invoice_type,
-                    'created': invoice.created,
-                    'due_date': invoice.due_date,
-                    'is_pending': invoice.is_pending,
-                    'data': invoice.data,
-                    'description': invoice.description,
-                    'link': invoice.link,
-                    
-                    #'logo': invoice.logo,
-                    'project_amount': invoice.project_amount,
-                    'currency': invoice.currency,
-                    'tax': invoice.tax,
-                    'shipping_fee': invoice.shipping_fee,
-                    'can_create_reminder': invoice.can_create_reminder
-                    
-                }
-
-    if exclude:
-        del data['can_create_reminder']
-        del data['pk']
-
-
-    return data 
-
-
-
 class CreateInvoice(CreateAPIView):
     permission_classes = (IsAuthenticated,)
     #authentication_classes = (SessionAuthentication,)
@@ -122,7 +51,7 @@ class CreateInvoice(CreateAPIView):
 
     def create(self, request, **kwargs):
         option = request.query_params.get('option', '')
-        client_id = request.query_params.get('client__id', 0)
+        client_id = request.query_params.get('client_id', 0)
         
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -131,8 +60,7 @@ class CreateInvoice(CreateAPIView):
 
         if client != 0:
             if request.user.subscription_plan.is_freemium:
-                verify_user_status = self.verify_user_monthly_invoice()
-                if verify_user_status:
+                if self.verify_user_monthly_invoice():
                     generate_link = self.generate_invoice_link(serializer.validated_data['invoice_id'], request.user.user_id)
                     self.perform_create(serializer, generate_link, client_id=client)
                     self.perform_invoice_delivery(generate_link, option, client=client, client_id=True)
@@ -141,15 +69,10 @@ class CreateInvoice(CreateAPIView):
                     return Response(data={
                     'status': 'failed', 'message': 'Exeeceded monthly limit'}, status=status.HTTP_400_BAD_REQUEST)
 
-                
-
-            
             generate_link = self.generate_invoice_link(serializer.validated_data['invoice_id'], request.user.user_id)
             self.perform_create(serializer, generate_link, client_id=client)
             self.perform_invoice_delivery(generate_link, option, client=client, client_id=True)
 
-
-            
 
         else:
             if request.user.subscription_plan.is_freemium:
@@ -167,10 +90,7 @@ class CreateInvoice(CreateAPIView):
             self.perform_invoice_delivery(generate_link, option, serializer=serializer)
     
         
-        return Response(data={
-            'data': serializer.data,
-            'url': generate_link
-        }, status=status.HTTP_201_CREATED)
+        return Response(data={ 'data': serializer.data,  'url': generate_link}, status=status.HTTP_201_CREATED)
 
 
     @staticmethod
@@ -210,7 +130,6 @@ class CreateInvoice(CreateAPIView):
             return client_pk
 
 
-
     def perform_create(self, instance, link, client_id, **kwargs):
         if client_id != 0:
             instance.save(link=link, client_id=client_id)
@@ -226,7 +145,6 @@ class CreateInvoice(CreateAPIView):
     
     def verify_user_monthly_invoice(self):
         invoice_count = Invoice.objects.filter(user=self.request.user, created__month=datetime.today().month).values('created').annotate(count=Count('pk'))
-        print(invoice_count)
 
         if not invoice_count.exists():
             return True
@@ -236,6 +154,7 @@ class CreateInvoice(CreateAPIView):
             return False
         return True
         
+
     
 
 class ViewPendingInvoice(ListAPIView):
@@ -246,59 +165,15 @@ class ViewPendingInvoice(ListAPIView):
     permission_classes = (IsAuthenticated,)
 
     def get_queryset(self):
-        data  = OrderedDict()
-        list_data = []
-        invoices = self.queryset.objects.filter(user=self.request.user, is_pending=True).order_by('-created').all()
-        if invoices.exists():
-            for invoice in invoices:
-                try:
-                    data = invoice_data_with_client(invoice)
-                except AttributeError:
-                    data = invoice_data_with__no_client(invoice)
-                   
-
-                list_data.append(data)
-
-        return list_data
-
+        return self.queryset.objects.filter(user=self.request.user, is_pending=True).order_by('-created').all()
        
-  
-    def list(self, request, *args, **kwargs):
-        queryset = self.filter_queryset(self.get_queryset())
-
-        page = self.paginate_queryset(queryset)
-        if page is not None:
-            #serializer = self.get_serializer(page, many=True)
-            return self.get_paginated_response(queryset)
-
-        #serializer = self.get_serializer(queryset, many=True)
-        return Response(queryset)
-
+       
 
 class ViewPaidInvoice(ViewPendingInvoice):
 
     def get_queryset(self):
-        data  = OrderedDict()
-        list_data = []
-        invoices = self.queryset.objects.filter(user=self.request.user, is_pending=False).order_by('-created').all()
-        if invoices.exists():
-            for invoice in invoices:
-                try:
-                    data = invoice_data(invoice)
-                except:
-                    data['client_email'] = invoice.client_email
-                    data['client_name'] = invoice.client_name
-                    data['client_phone_number'] = invoice.client_phone_number
-                    data['client_address'] = invoice.client_address
-
-                    list_data.append(data)
-
-                else:
-                    list_data.append(data)
+        return self.queryset.objects.filter(user=self.request.user, is_pending=False).order_by('-created').all()
         
-
-        return list_data
-
 
 @api_view(['GET'])
 #@authentication_classes([SessionAuthentication,])
@@ -310,19 +185,11 @@ def invoice_detail_view(request, invoice_id=None):
                  attribute on the view correctly".format(invoice_detail_view, invoice_id)
         )
     
-    data = OrderedDict()
-    invoice = get_object_or_404(Invoice, invoice_id=invoice_id)
+    invoice = get_object_or_404(Invoice, invoice_id=invoice_id)      
 
-    #data =  invoice_data(invoice)
-    try:
-        data = invoice_data_with_client(invoice)
-    except:
-        data = invoice_data_with__no_client(invoice) 
-        
-        
+    invoice_data =  InvoiceSerializer(instance=invoice).data
 
-    return Response(data)
-
+    return Response(invoice_data)
 
 
 
@@ -330,24 +197,10 @@ class CreateClient(CreateAPIView):
     permission_classes = (IsAuthenticated,)
     queryset = ClientInfo
     serializer_class = ClientSerializer
-
-
-    def create(self, request, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        if serializer.validated_data['client_email'] == request.user.email:
-            raise ValidationError('You cant add yourself as a client')
-        self.perform_create(serializer)
-
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-
  
-  
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
     
-
-
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated,])
@@ -358,7 +211,6 @@ def retrieve_client_info(request, user_pk):
         'client_email': client_detail.client_email,
         'client_phone_number': client_detail.phone_number
     }, status=status.HTTP_200_OK)
-
 
 
 
@@ -452,13 +304,10 @@ class CreateAutomatedReminder(CreateAPIView):
                         invoice.can_create_reminder = False
                         invoice.save()
                         return Response(data='Reminder created', status=status.HTTP_201_CREATED)
-                  
-                    
             else:
                 self.reminder_cant_be_created()
 
-    @staticmethod
-    def reminder_cant_be_created():
+    def reminder_cant_be_created(self):
         return Response(data='Reminder Cant be created', status=status.HTTP_400_BAD_REQUEST)
         
     def perform_create(self, instance, invoice_id, day=0):
@@ -480,7 +329,6 @@ def approve_invoice(request, invoice_id):
     invoice = Invoice.objects.get(invoice_id__iexact=invoice_id)
     invoice.is_pending = False
     invoice.save()
-
     return Response(data='Reminder Cancelled', status=status.HTTP_200_OK)
 
 
@@ -490,12 +338,9 @@ class DeleteClientView(DestroyAPIView):
     queryset = ClientInfo
     lookup_field = 'pk'
 
-
-
 class DeleteInvoiceView(DeleteClientView):
     queryset = Invoice
     serializer_class = InvoiceSerializer
-
 
 
 @api_view(['GET'])
@@ -523,8 +368,6 @@ def view_invoice_for_payment(request, invoice_id):
     except Invoice.DoestNotExist:
        raise  ValidationError('The request made to this server was bad')
 
-
-
     user_detail = {
         'business_name': user.buiness_info.business_name,
         'business_number': user.buiness_info.business_number,
@@ -532,18 +375,10 @@ def view_invoice_for_payment(request, invoice_id):
         'business_email': user.email
     }
 
-    #invoice = get_object_or_404(Invoice, invoice_id=invoice_id)
-    #invoice_detail = invoice_data(invoice, exclude=True)
-    try:
-        invoice_detail = invoice_data_with_client(invoice, exclude=True)
-    except AttributeError:
-        invoice_detail = invoice_data_with__no_client(invoice, exclude=True)
-        
-    
-    
+    invoice_detail = InvoiceSerializer(instance=invoice).data
     data['user'] = user_detail
     data['invoice_detail'] = invoice_detail
-    print(data)
+    
     return Response(data)
 
 

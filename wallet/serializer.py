@@ -8,13 +8,10 @@ class SecurePassword(Serializer):
     password = serializers.CharField(required=True)
 
 
-
-
 class AddBankSerializer(serializers.ModelSerializer):
     class Meta:
         model = BankDetails
         exclude= ('bank_id',)
-
 
     def create(self, validated_data):
         request = self.context.get('request', None)

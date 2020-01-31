@@ -38,9 +38,7 @@ def gain_secure_token(request):
 
 
 class AddBankDetails(CreateAPIView):
-
-
-    permission_classes = (IsAuthenticated ,SecureView,)
+    permission_classes = (IsAuthenticated ,SecureView)
     queryset = BankDetails
     serializer_class = AddBankSerializer
 
@@ -52,7 +50,6 @@ class AddBankDetails(CreateAPIView):
 
 
 class UpdateBank(RetrieveUpdateAPIView):
-    
     permission_classes = (IsAuthenticated, SecureView)
     queryset = BankDetails
     serializer_class = AddBankSerializer

@@ -15,8 +15,6 @@ class WalletBalance(models.Model):
         return str(self.balance_id)
 
 
-
-
 class BankDetails(models.Model):
     bank_id = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
     related_name='bank_details'

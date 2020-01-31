@@ -458,7 +458,7 @@ class DeleteInvoiceView(DeleteClientView):
 
 
 @api_view(['GET'])
-@authentication_classes([JwtAuthentication,])
+#@authentication_classes([JwtAuthentication,])
 @permission_classes([AllowAny,])
 def view_invoice_for_payment(request, invoice_id):
     user_id = request.query_params.get('user_id', None)
